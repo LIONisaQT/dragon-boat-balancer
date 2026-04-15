@@ -1,0 +1,88 @@
+@import url("./colors.css");
+
+:root {
+  font-synthesis: none;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  background: var(--darkest);
+  color: var(--light);
+
+  max-width: 1000px;
+  margin: 20px auto;
+  padding-bottom: 20px;
+  text-align: center;
+
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  scrollbar-gutter: stable;
+}
+
+body {
+  box-sizing: border-box;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+body,
+p,
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+body,
+button,
+input,
+select,
+p,
+h1,
+h2,
+h3 {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+}
+
+option {
+  font-size: 1rem;
+}
+
+p,
+label,
+input,
+select,
+button {
+  font-size: 1.125rem;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+button {
+  cursor: pointer;
+  background-color: var(--dark);
+  color: var(--light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -1,0 +1,13 @@
+@import url("../../colors.css");
+
+.toggles {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  section {
+    display: flex;
+    flex-direction: column;
+  }
+}

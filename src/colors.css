@@ -1,0 +1,29 @@
+:root {
+  --darkest: hsl(270, 10%, 11%);
+  --darker: hsl(270, 10%, 16%);
+  --dark: hsl(270, 10%, 21%);
+  --light: hsl(220, 6%, 90%);
+  --light-muted: hsl(220, 6%, 65%);
+  --cyan: #8be9fd;
+  --green: #50fa7b;
+  --orange: #ffb86c;
+  --pink: #ff79c6;
+  --purple: #bd93f9;
+  --red: #ff5555;
+  --yellow: #f1fa8c;
+}
+
+.light-mode {
+  --darkest: hsl(270, 10%, 89%);
+  --darker: hsl(270, 10%, 84%);
+  --dark: hsl(270, 10%, 79%);
+  --light: hsl(220, 6%, 10%);
+  --light-muted: hsl(220, 6%, 35%);
+  --cyan: #8be9fd;
+  --green: #50fa7b;
+  --orange: #ffb86c;
+  --pink: #ff79c6;
+  --purple: #bd93f9;
+  --red: #ff5555;
+  --yellow: #f1fa8c;
+}
