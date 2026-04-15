@@ -1,6 +1,7 @@
 {
-  "extends": "./tsconfig.base.json",
+  "files": [],
   "references": [
-    { "path": "./dragon-boat" },
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
   ]
 }

@@ -33,7 +33,7 @@ export const getCenterOfMass = (
 
 function getSectionMultiplier(
   paddlerRow: number,
-  targetRow: number,
+  _targetRow: number,
   numRows: number,
 ): number {
   const rowsPerSection = numRows / 3;
