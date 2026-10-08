@@ -16,7 +16,7 @@
     "@tanstack/react-table": "^8.21.3",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
-    "firebase": "^12.3.0",
+    "firebase": "^13.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-full-screen": "^1.1.1",
@@ -53,5 +53,16 @@
       "prettier --write",
       "eslint --fix"
     ]
+  },
+  "allowScripts": {
+    "@firebase/util@1.15.3": true,
+    "esbuild@0.25.12": true,
+    "fsevents@2.3.3": true,
+    "@parcel/watcher@2.6.0": true,
+    "@swc/core@1.16.13": true,
+    "protobufjs@6.11.6": true
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
   }
 }
