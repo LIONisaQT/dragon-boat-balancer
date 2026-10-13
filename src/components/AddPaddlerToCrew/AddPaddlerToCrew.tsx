@@ -38,48 +38,55 @@ function AddPaddlerToCrew({
 
   return (
     <div className={`add-to-crew-container ${isOpen ? "" : "hidden"}`}>
-      <table>
-        <thead>
-          <tr>
-            <th>
-              <input
-                type="checkbox"
-                checked={allSelected}
-                onChange={() => setSelected(allSelected ? [] : paddlers)}
-              />
-            </th>
-            <th>Name</th>
-            <th>Side</th>
-            <th>Weight</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paddlers.map((p) => (
-            <tr key={p.id}>
-              <td>
+      <div className="add-to-crew-bg"></div>
+      <div className="add-to-crew-modal">
+        <table>
+          <thead>
+            <tr>
+              <th>
                 <input
                   type="checkbox"
-                  checked={selected.some((paddler) => paddler.id === p.id)}
-                  onChange={() => onPaddlerChecked(p)}
+                  checked={allSelected}
+                  onChange={() => setSelected(allSelected ? [] : paddlers)}
                 />
-              </td>
-              <td>
-                <p>{p.name}</p>
-              </td>
-              <td>{p.side}</td>
-              <td>{p.weight}</td>
+              </th>
+              <th>Name</th>
+              <th>Side</th>
+              <th>Weight</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <button
-        onClick={() => {
-          addToRosterClicked(selected);
-          setOpen(false);
-        }}
-      >
-        Add to roster
-      </button>
+          </thead>
+          <tbody>
+            {paddlers.map((p) => (
+              <tr key={p.id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selected.some((paddler) => paddler.id === p.id)}
+                    onChange={() => onPaddlerChecked(p)}
+                  />
+                </td>
+                <td>
+                  <p>{p.name}</p>
+                </td>
+                <td>{p.side}</td>
+                <td>{p.weight}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="button-group">
+          <button
+            className="update-roster-button"
+            onClick={() => {
+              addToRosterClicked(selected);
+              setOpen(false);
+            }}
+          >
+            Update roster
+          </button>
+          <button className="cancel">Close</button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,55 @@
+@import url(../../colors.css);
+
+.add-to-crew-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+
+  .add-to-crew-bg {
+    z-index: 1000;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.5);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .add-to-crew-modal {
+    z-index: 1001;
+    position: absolute;
+    background: var(--darker);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    padding: 24px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+
+    table {
+      width: 100%;
+
+      thead {
+        background: var(--darkest);
+      }
+    }
+
+    .button-group {
+      width: 100%;
+      display: flex;
+      gap: 12px;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.hidden {
+  display: none;
+}
