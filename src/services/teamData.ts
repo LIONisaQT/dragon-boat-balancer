@@ -3,6 +3,7 @@ import {
   doc,
   onSnapshot,
   setDoc,
+  updateDoc,
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
@@ -85,4 +86,12 @@ export async function createTeamPaddler(teamId: string): Promise<void> {
   };
 
   await setDoc(paddlerRef, paddler);
+}
+
+export async function updateTeamCrew(
+  teamId: string,
+  crew: Crew,
+): Promise<void> {
+  const crewRef = doc(db, "teams", teamId, "crews", crew.id);
+  await updateDoc(crewRef, crew);
 }

@@ -14,28 +14,24 @@ import {
   useMemo,
   useRef,
 } from "react";
-import {
-  Paddler,
-  SideArray,
-  PaddlerLocation,
-  Crew,
-  BoatPaddler,
-} from "../../types";
+import { Paddler, SideArray, PaddlerLocation, Crew } from "../../types";
 import { generateLineup } from "../../utils/utils";
 import Boat from "../Boat/Boat";
 import Roster from "../Roster/Roster";
 import Toggles from "../Toggles/Toggles";
-import AddNewPaddler from "../Roster/AddNewPaddler";
+import AddPaddlerToCrew from "../AddPaddlerToCrew/AddPaddlerToCrew";
 
 const DEBOUNCE_TIMER = 1000;
 
 interface CrewManagerProps {
+  paddlers: Paddler[];
   crew: Crew;
   onClose?: (crew: Crew) => void;
   onEdit?: (crew: Crew) => void;
 }
 
 export default function CrewManager({
+  paddlers,
   crew,
   onClose,
   onEdit,
@@ -51,13 +47,23 @@ export default function CrewManager({
   const [drum, setDrum] = useState<Paddler | null>(crew.drum);
   const [steer, setSteer] = useState<Paddler | null>(crew.steer);
 
+  const crewPaddlers = useMemo(() => {
+    const members = [
+      ...roster,
+      ...leftSide.filter((p): p is Paddler => p !== null),
+      ...rightSide.filter((p): p is Paddler => p !== null),
+      ...(drum ? [drum] : []),
+      ...(steer ? [steer] : []),
+    ];
+    const uniqueMembers = new Map<string, Paddler>();
+    members.forEach((p) => uniqueMembers.set(p.id, p));
+    return [...uniqueMembers.values()];
+  }, [roster, leftSide, rightSide, drum, steer]);
+
   const [name, setName] = useState(crew.name);
   const [updatedName, setUpdatedName] = useState(crew.name);
 
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [selectedPaddler, setSelectedPaddler] = useState<BoatPaddler | null>(
-    null,
-  );
 
   useEffect(() => {
     // Prevent saving on mount
@@ -336,29 +342,10 @@ export default function CrewManager({
     steer !== null;
 
   const onAddNewClicked = () => {
-    setSelectedPaddler(null);
     setAddModalOpen(true);
   };
 
   const onEditClicked = () => setAddModalOpen(true);
-
-  const onSubmit = (paddler: BoatPaddler, isNew: boolean) => {
-    if (isNew) {
-      setRoster((prev) => [...prev, paddler.details]);
-    } else {
-      if (getSingleSlot(paddler.location)) {
-        setSingleSlot(paddler.location, paddler.details);
-      } else {
-        addMap[paddler.location]?.(paddler.details, paddler.position as number);
-      }
-    }
-
-    setAddModalOpen(false);
-  };
-
-  useEffect(() => {
-    if (!addModalOpen) setSelectedPaddler(null);
-  }, [addModalOpen]);
 
   const deletePaddler = (
     paddler: Paddler,
@@ -374,6 +361,41 @@ export default function CrewManager({
     } catch (err) {
       console.error("Failed to copy crew ID:", crewId, err);
     }
+  };
+
+  const addToRoster = (paddlers: Paddler[]) => {
+    const selectedIds = new Set(paddlers.map((p) => p.id));
+    const seatedIds = new Set(
+      [
+        ...leftSide.filter((p): p is Paddler => p !== null),
+        ...rightSide.filter((p): p is Paddler => p !== null),
+        ...(drum ? [drum] : []),
+        ...(steer ? [steer] : []),
+      ].map((p) => p.id),
+    );
+
+    setRoster((currentRoster) => {
+      const retained = currentRoster.filter(
+        (p) => selectedIds.has(p.id) && !seatedIds.has(p.id),
+      );
+      const retainedIds = new Set(retained.map((p) => p.id));
+      const additions = paddlers.filter(
+        (p) => !seatedIds.has(p.id) && !retainedIds.has(p.id),
+      );
+      return [...retained, ...additions];
+    });
+    setLeftSide((current) =>
+      current.map((p) => (p && !selectedIds.has(p.id) ? null : p)),
+    );
+    setRightSide((current) =>
+      current.map((p) => (p && !selectedIds.has(p.id) ? null : p)),
+    );
+    setDrum((current) =>
+      current && !selectedIds.has(current.id) ? null : current,
+    );
+    setSteer((current) =>
+      current && !selectedIds.has(current.id) ? null : current,
+    );
   };
 
   return (
@@ -439,7 +461,7 @@ export default function CrewManager({
               drum={drum}
               steer={steer}
               rowSize={numRows}
-              clickPaddler={setSelectedPaddler}
+              clickPaddler={() => {}}
               editPaddler={onEditClicked}
               deletePaddler={deletePaddler}
             />
@@ -447,15 +469,16 @@ export default function CrewManager({
           <Roster
             rosterState={[roster, setRoster]}
             addNew={onAddNewClicked}
-            clickPaddler={setSelectedPaddler}
+            clickPaddler={() => {}}
             editPaddler={onEditClicked}
             deletePaddler={deletePaddler}
           />
         </div>
-        <AddNewPaddler
+        <AddPaddlerToCrew
           openState={[addModalOpen, setAddModalOpen]}
-          paddler={selectedPaddler}
-          onSubmit={onSubmit}
+          paddlers={paddlers}
+          crewPaddlers={crewPaddlers}
+          addToRosterClicked={addToRoster}
         />
       </DndContext>
     </div>
