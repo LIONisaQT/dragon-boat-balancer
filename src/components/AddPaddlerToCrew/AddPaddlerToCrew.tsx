@@ -84,7 +84,9 @@ function AddPaddlerToCrew({
           >
             Update roster
           </button>
-          <button className="cancel">Close</button>
+          <button className="close" onClick={() => setOpen(false)}>
+            Close
+          </button>
         </div>
       </div>
     </div>
