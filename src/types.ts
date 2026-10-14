@@ -30,9 +30,3 @@ export type Crew = {
   steer: Paddler | null;
   roster: Paddler[];
 };
-
-export type BoatPaddler = {
-  details: Paddler;
-  location: PaddlerLocation;
-  position: PaddlerPosition;
-};

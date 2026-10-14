@@ -1,5 +1,5 @@
 import "./Boat.scss";
-import { BoatPaddler, Paddler, PaddlerLocation, SideArray } from "../../types";
+import { Paddler, PaddlerLocation, SideArray } from "../../types";
 import { sumSideWeight, getCenterOfMass } from "../../utils/utils";
 import PaddlerCard from "../PaddlerCard/PaddlerCard";
 
@@ -9,7 +9,7 @@ interface BoatProps {
   drum: Paddler | null;
   steer: Paddler | null;
   rowSize: number;
-  clickPaddler: (paddler: BoatPaddler) => void;
+  clickPaddler: (paddler: Paddler) => void;
   editPaddler: () => void;
   deletePaddler: (
     paddler: Paddler,

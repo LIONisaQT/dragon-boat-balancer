@@ -9,6 +9,7 @@ import {
   updateTeamCrew,
 } from "./services/teamData";
 import CrewManager from "./components/CrewManager/CrewManager";
+import AddNewPaddler from "./components/Roster/AddNewPaddler";
 
 function DragonBoat() {
   const [teamId, setTeamId] = useState("");
@@ -16,6 +17,8 @@ function DragonBoat() {
   const [paddlers, setPaddlers] = useState<Paddler[]>([]);
 
   const [currCrew, setCurrCrew] = useState<Crew | undefined>(undefined);
+
+  const [addModalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const localId = localStorage.getItem("localTeamId") ?? crypto.randomUUID();
@@ -56,11 +59,11 @@ function DragonBoat() {
     }
   };
 
-  const addPaddler = async () => {
+  const addPaddler = async (paddler: Paddler) => {
     if (!teamId) return;
 
     try {
-      await createTeamPaddler(teamId);
+      await createTeamPaddler(teamId, paddler);
     } catch (error) {
       console.error(`Failed to create paddler for team ${teamId}:`, error);
       alert("Failed to add paddler");
@@ -115,7 +118,12 @@ function DragonBoat() {
                 <button key={p.id}>{p.name}</button>
               ))}
             </div>
-            <button onClick={addPaddler}>Add paddler</button>
+            <button onClick={() => setModalOpen(true)}>Add paddler</button>
+            <AddNewPaddler
+              openState={[addModalOpen, setModalOpen]}
+              paddler={null}
+              onSubmit={addPaddler}
+            />
           </section>
         </>
       )}

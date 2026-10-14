@@ -1,5 +1,5 @@
 import "./PaddlerCard.scss";
-import { BoatPaddler, Paddler, PaddlerLocation } from "../../types";
+import { Paddler, PaddlerLocation } from "../../types";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "../../hooks/useOnClickOutside";
@@ -8,7 +8,7 @@ interface PaddlerProps {
   details: Paddler | null;
   location: PaddlerLocation;
   position: number | "drum" | "steer";
-  onClick: (paddler: BoatPaddler) => void;
+  onClick: (paddler: Paddler) => void;
   onEdit: () => void;
   onDelete: (
     paddler: Paddler,
@@ -90,7 +90,7 @@ export default function PaddlerCard({
         <div
           className="info-card"
           ref={cardRef}
-          onClick={() => onClick({ details, location, position })}
+          onClick={() => onClick(details)}
         >
           <p className="name-container">
             {typeof position === "number" &&

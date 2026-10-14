@@ -1,12 +1,12 @@
-import { BoatPaddler, Paddler } from "../../types";
+import { Paddler } from "../../types";
 import { sanitizeNumber, sanitizeText } from "../../utils/utils";
 import "./AddNewPaddler.scss";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 interface AddNewPaddlerProps {
   openState: [boolean, Dispatch<SetStateAction<boolean>>];
-  paddler: BoatPaddler | null;
-  onSubmit: (paddler: BoatPaddler, isNew: boolean) => void;
+  paddler: Paddler | null;
+  onSubmit: (paddler: Paddler, isNew: boolean) => void;
 }
 
 export default function AddNewPaddler({
@@ -24,11 +24,11 @@ export default function AddNewPaddler({
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add("modal-open");
-      setName(paddler ? paddler.details.name : "");
-      setSide(paddler ? paddler.details.side : "both");
-      setWeight(paddler ? paddler.details.weight : 100);
-      setPower(paddler ? paddler.details.power : 100);
-      setHeight(paddler ? paddler.details.height : 5.9);
+      setName(paddler ? paddler.name : "");
+      setSide(paddler ? paddler.side : "both");
+      setWeight(paddler ? paddler.weight : 100);
+      setPower(paddler ? paddler.power : 100);
+      setHeight(paddler ? paddler.height : 5.9);
     } else {
       document.body.classList.remove("modal-open");
       setName("");
@@ -194,17 +194,13 @@ export default function AddNewPaddler({
             onClick={() =>
               onSubmit(
                 {
-                  details: {
-                    id: paddler ? paddler.details.id : crypto.randomUUID(),
-                    name,
-                    side,
-                    weight,
-                    power,
-                    height,
-                  } as Paddler,
-                  location: paddler ? paddler.location : "roster",
-                  position: paddler ? paddler.position : 0,
-                },
+                  id: paddler ? paddler.id : crypto.randomUUID(),
+                  name,
+                  side,
+                  weight,
+                  power,
+                  height,
+                } as Paddler,
                 !paddler,
               )
             }

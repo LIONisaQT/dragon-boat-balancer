@@ -1,13 +1,13 @@
 import "./Roster.scss";
 import { Dispatch, SetStateAction } from "react";
-import { BoatPaddler, Paddler, PaddlerLocation } from "../../types";
+import { Paddler, PaddlerLocation } from "../../types";
 import { sortRosterByWeight, sortRosterBySide } from "../../utils/utils";
 import PaddlerCard from "../PaddlerCard/PaddlerCard";
 
 interface RosterProps {
   rosterState: [Paddler[], Dispatch<SetStateAction<Paddler[]>>];
   addNew: () => void;
-  clickPaddler: (paddler: BoatPaddler) => void;
+  clickPaddler: (paddler: Paddler) => void;
   editPaddler: () => void;
   deletePaddler: (
     paddler: Paddler,

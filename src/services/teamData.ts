@@ -74,17 +74,11 @@ export async function createTeamCrew(teamId: string): Promise<void> {
   await setDoc(crewRef, crew);
 }
 
-export async function createTeamPaddler(teamId: string): Promise<void> {
+export async function createTeamPaddler(
+  teamId: string,
+  paddler: Paddler,
+): Promise<void> {
   const paddlerRef = doc(collection(db, "teams", teamId, "paddlers"));
-  const paddler: Paddler = {
-    id: paddlerRef.id,
-    name: "Paddler",
-    side: "both",
-    power: 0,
-    weight: 0,
-    height: 0,
-  };
-
   await setDoc(paddlerRef, paddler);
 }
 
