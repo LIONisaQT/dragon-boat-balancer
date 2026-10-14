@@ -10,11 +10,6 @@ interface PaddlerProps {
   position: number | "drum" | "steer";
   onClick: (paddler: Paddler) => void;
   onEdit: () => void;
-  onDelete: (
-    paddler: Paddler,
-    location: PaddlerLocation,
-    position: number | "drum" | "steer",
-  ) => void;
 }
 
 export default function PaddlerCard({
@@ -23,7 +18,6 @@ export default function PaddlerCard({
   location,
   onClick,
   onEdit,
-  onDelete,
 }: PaddlerProps) {
   const [isPopupOpen, setPopupOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -123,12 +117,6 @@ export default function PaddlerCard({
       >
         <button onClick={() => details && onEdit()} title="Edit">
           ✍️
-        </button>
-        <button
-          onClick={() => details && onDelete(details, location, position)}
-          title="Delete"
-        >
-          🗑️
         </button>
       </div>
     </div>

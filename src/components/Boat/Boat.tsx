@@ -1,5 +1,5 @@
 import "./Boat.scss";
-import { Paddler, PaddlerLocation, SideArray } from "../../types";
+import { Paddler, SideArray } from "../../types";
 import { sumSideWeight, getCenterOfMass } from "../../utils/utils";
 import PaddlerCard from "../PaddlerCard/PaddlerCard";
 
@@ -11,11 +11,6 @@ interface BoatProps {
   rowSize: number;
   clickPaddler: (paddler: Paddler) => void;
   editPaddler: () => void;
-  deletePaddler: (
-    paddler: Paddler,
-    location: PaddlerLocation,
-    position: number | "drum" | "steer",
-  ) => void;
 }
 
 export default function Boat({
@@ -26,7 +21,6 @@ export default function Boat({
   rowSize,
   clickPaddler,
   editPaddler,
-  deletePaddler,
 }: BoatProps) {
   return (
     <section className="boat-container">
@@ -41,7 +35,6 @@ export default function Boat({
               location="left"
               onClick={clickPaddler}
               onEdit={editPaddler}
-              onDelete={deletePaddler}
             />
           ))}
         </div>
@@ -53,7 +46,6 @@ export default function Boat({
               location="drum"
               onClick={clickPaddler}
               onEdit={editPaddler}
-              onDelete={deletePaddler}
             />
           </div>
           <div className="boat-stats">
@@ -79,7 +71,6 @@ export default function Boat({
               location="steer"
               onClick={clickPaddler}
               onEdit={editPaddler}
-              onDelete={deletePaddler}
             />
           </div>
         </div>
@@ -92,7 +83,6 @@ export default function Boat({
               location="right"
               onClick={clickPaddler}
               onEdit={editPaddler}
-              onDelete={deletePaddler}
             />
           ))}
         </div>

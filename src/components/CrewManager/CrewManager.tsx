@@ -347,14 +347,6 @@ export default function CrewManager({
 
   const onEditClicked = () => setAddModalOpen(true);
 
-  const deletePaddler = (
-    paddler: Paddler,
-    location: PaddlerLocation,
-    position: number | "drum" | "steer",
-  ) => {
-    removeMap[location]?.(paddler, position as number);
-  };
-
   const copyCrewIdToClipboard = async (crewId: string) => {
     try {
       await navigator.clipboard.writeText(crewId);
@@ -463,7 +455,6 @@ export default function CrewManager({
               rowSize={numRows}
               clickPaddler={() => {}}
               editPaddler={onEditClicked}
-              deletePaddler={deletePaddler}
             />
           </section>
           <Roster
@@ -471,7 +462,6 @@ export default function CrewManager({
             addNew={onAddNewClicked}
             clickPaddler={() => {}}
             editPaddler={onEditClicked}
-            deletePaddler={deletePaddler}
           />
         </div>
         <AddPaddlerToCrew

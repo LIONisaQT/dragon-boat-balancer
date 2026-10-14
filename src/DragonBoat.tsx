@@ -10,6 +10,7 @@ import {
 } from "./services/teamData";
 import CrewManager from "./components/CrewManager/CrewManager";
 import AddNewPaddler from "./components/Roster/AddNewPaddler";
+import PaddlerCard from "./components/PaddlerCard/PaddlerCard";
 
 function DragonBoat() {
   const [teamId, setTeamId] = useState("");
@@ -114,8 +115,14 @@ function DragonBoat() {
           <section className="paddlers">
             <h2>Your paddlers</h2>
             <div className="paddler-list">
-              {paddlers.map((p) => (
-                <button key={p.id}>{p.name}</button>
+              {paddlers.map((p, i) => (
+                <PaddlerCard
+                  details={p}
+                  location="roster"
+                  position={i}
+                  onClick={() => {}}
+                  onEdit={() => {}}
+                />
               ))}
             </div>
             <button onClick={() => setModalOpen(true)}>Add paddler</button>
