@@ -1,11 +1,12 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Paddler } from "../../types";
 import "./AddPaddlerToCrew.scss";
+import PaddlerTable from "../PaddlerTable/PaddlerTable";
 
 interface AddPaddlerToCrewProps {
   openState: [boolean, Dispatch<SetStateAction<boolean>>];
   paddlers: Paddler[]; // List of all paddlers on team
-  crewPaddlers: Paddler[];
+  crewPaddlers: Paddler[]; // List of all paddlers on the current crew
   addToRosterClicked: (paddlers: Paddler[]) => void;
 }
 
@@ -22,72 +23,26 @@ function AddPaddlerToCrew({
     if (isOpen) setSelected(crewPaddlers);
   }, [isOpen, crewPaddlers]);
 
-  const allSelected =
-    paddlers.length > 0 &&
-    paddlers.every((p) =>
-      selected.some((selectedPaddler) => selectedPaddler.id === p.id),
-    );
-
-  const onPaddlerChecked = (paddler: Paddler) => {
-    setSelected((current) =>
-      current.some((selectedPaddler) => selectedPaddler.id === paddler.id)
-        ? current.filter((selectedPaddler) => selectedPaddler.id !== paddler.id)
-        : [...current, paddler],
-    );
+  const onPaddlerChecked = (paddlers: Paddler[]) => {
+    setSelected(paddlers);
   };
 
   return (
     <div className={`add-to-crew-container ${isOpen ? "" : "hidden"}`}>
       <div className="add-to-crew-bg"></div>
       <div className="add-to-crew-modal">
-        <table>
-          <thead>
-            <tr>
-              <th>
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={() => setSelected(allSelected ? [] : paddlers)}
-                />
-              </th>
-              <th>Name</th>
-              <th>Side</th>
-              <th>Weight</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paddlers.map((p) => (
-              <tr key={p.id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selected.some((paddler) => paddler.id === p.id)}
-                    onChange={() => onPaddlerChecked(p)}
-                  />
-                </td>
-                <td>
-                  <p>{p.name}</p>
-                </td>
-                <td>{p.side}</td>
-                <td>{p.weight}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="button-group">
-          <button
-            className="update-roster-button"
-            onClick={() => {
-              addToRosterClicked(selected);
-              setOpen(false);
-            }}
-          >
-            Update roster
-          </button>
-          <button className="close" onClick={() => setOpen(false)}>
-            Close
-          </button>
-        </div>
+        <PaddlerTable
+          paddlers={paddlers}
+          initialSelection={selected}
+          onChecked={onPaddlerChecked}
+          onPrimaryClicked={() => {
+            addToRosterClicked(selected);
+            setOpen(false);
+          }}
+          primaryButtonText="Update crew"
+          onSecondaryClicked={() => setOpen(false)}
+          secondaryButtonText="Close"
+        />
       </div>
     </div>
   );

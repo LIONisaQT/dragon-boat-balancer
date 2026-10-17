@@ -10,12 +10,13 @@ import {
 } from "./services/teamData";
 import CrewManager from "./components/CrewManager/CrewManager";
 import AddNewPaddler from "./components/Roster/AddNewPaddler";
-import PaddlerCard from "./components/PaddlerCard/PaddlerCard";
+import PaddlerTable from "./components/PaddlerTable/PaddlerTable";
 
 function DragonBoat() {
   const [teamId, setTeamId] = useState("");
   const [crews, setCrews] = useState<Crew[]>([]);
   const [paddlers, setPaddlers] = useState<Paddler[]>([]);
+  const [selected, setSelected] = useState<Paddler[]>([]);
 
   const [currCrew, setCurrCrew] = useState<Crew | undefined>(undefined);
 
@@ -88,6 +89,10 @@ function DragonBoat() {
 
   const onCloseClicked = () => setCurrCrew(undefined);
 
+  const onPaddlerChecked = (paddlers: Paddler[]) => {
+    setSelected(paddlers);
+  };
+
   return (
     <>
       <h1>Dragon Boat</h1>
@@ -114,18 +119,15 @@ function DragonBoat() {
           </section>
           <section className="paddlers">
             <h2>Your paddlers</h2>
-            <div className="paddler-list">
-              {paddlers.map((p, i) => (
-                <PaddlerCard
-                  details={p}
-                  location="roster"
-                  position={i}
-                  onClick={() => {}}
-                  onEdit={() => {}}
-                />
-              ))}
-            </div>
-            <button onClick={() => setModalOpen(true)}>Add paddler</button>
+            <PaddlerTable
+              paddlers={paddlers}
+              initialSelection={selected}
+              onChecked={onPaddlerChecked}
+              onPrimaryClicked={() => setModalOpen(true)}
+              primaryButtonText="Add paddler"
+              onSecondaryClicked={selected.length > 0 ? () => {} : null}
+              secondaryButtonText="Delete selected"
+            />
             <AddNewPaddler
               openState={[addModalOpen, setModalOpen]}
               paddler={null}

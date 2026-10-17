@@ -1,0 +1,27 @@
+@import url(../../colors.css);
+
+.paddler-table {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+
+  table {
+    width: 100%;
+  }
+
+  thead {
+    background: var(--darkest);
+  }
+
+  .button-group {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+
+    button {
+      width: 100%;
+    }
+  }
+}
