@@ -4,6 +4,7 @@ import { Crew, Paddler } from "./types";
 import {
   createTeamCrew,
   createTeamPaddler,
+  deleteTeamPaddlers,
   subscribeToTeamCrews,
   subscribeToTeamPaddlers,
   updateTeamCrew,
@@ -72,6 +73,18 @@ function DragonBoat() {
     }
   };
 
+  const deletePaddlers = async (paddlersToDelete: Paddler[]) => {
+    if (!teamId || paddlersToDelete.length === 0) return;
+
+    try {
+      await deleteTeamPaddlers(teamId, paddlersToDelete);
+      setSelected([]);
+    } catch (error) {
+      console.error(`Failed to delete paddlers from team ${teamId}:`, error);
+      alert("Failed to delete selected paddlers");
+    }
+  };
+
   const onEditCrew = useCallback(
     async (updatedCrew: Crew) => {
       if (!teamId) return;
@@ -88,10 +101,6 @@ function DragonBoat() {
   );
 
   const onCloseClicked = () => setCurrCrew(undefined);
-
-  const onPaddlerChecked = (paddlers: Paddler[]) => {
-    setSelected(paddlers);
-  };
 
   return (
     <>
@@ -121,11 +130,13 @@ function DragonBoat() {
             <h2>Your paddlers</h2>
             <PaddlerTable
               paddlers={paddlers}
-              initialSelection={selected}
-              onChecked={onPaddlerChecked}
+              selected={selected}
+              onSelectionChange={setSelected}
               onPrimaryClicked={() => setModalOpen(true)}
               primaryButtonText="Add paddler"
-              onSecondaryClicked={selected.length > 0 ? () => {} : null}
+              onSecondaryClicked={
+                selected.length > 0 ? () => deletePaddlers(selected) : null
+              }
               secondaryButtonText="Delete selected"
             />
             <AddNewPaddler

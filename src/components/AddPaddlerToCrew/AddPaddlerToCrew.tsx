@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Paddler } from "../../types";
 import "./AddPaddlerToCrew.scss";
 import PaddlerTable from "../PaddlerTable/PaddlerTable";
@@ -6,26 +6,19 @@ import PaddlerTable from "../PaddlerTable/PaddlerTable";
 interface AddPaddlerToCrewProps {
   openState: [boolean, Dispatch<SetStateAction<boolean>>];
   paddlers: Paddler[]; // List of all paddlers on team
-  crewPaddlers: Paddler[]; // List of all paddlers on the current crew
+  selected: Paddler[];
+  onSelectionChange: (paddlers: Paddler[]) => void;
   addToRosterClicked: (paddlers: Paddler[]) => void;
 }
 
 function AddPaddlerToCrew({
   openState,
   paddlers,
-  crewPaddlers,
+  selected,
+  onSelectionChange,
   addToRosterClicked,
 }: AddPaddlerToCrewProps) {
   const [isOpen, setOpen] = openState;
-  const [selected, setSelected] = useState<Paddler[]>(crewPaddlers);
-
-  useEffect(() => {
-    if (isOpen) setSelected(crewPaddlers);
-  }, [isOpen, crewPaddlers]);
-
-  const onPaddlerChecked = (paddlers: Paddler[]) => {
-    setSelected(paddlers);
-  };
 
   return (
     <div className={`add-to-crew-container ${isOpen ? "" : "hidden"}`}>
@@ -33,8 +26,8 @@ function AddPaddlerToCrew({
       <div className="add-to-crew-modal">
         <PaddlerTable
           paddlers={paddlers}
-          initialSelection={selected}
-          onChecked={onPaddlerChecked}
+          selected={selected}
+          onSelectionChange={onSelectionChange}
           onPrimaryClicked={() => {
             addToRosterClicked(selected);
             setOpen(false);

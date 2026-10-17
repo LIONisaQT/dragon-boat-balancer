@@ -1,12 +1,11 @@
 import "./PaddlerTable.scss";
 
-import { useEffect, useState } from "react";
 import { Paddler } from "../../types";
 
 interface TableProps {
   paddlers: Paddler[];
-  initialSelection: Paddler[];
-  onChecked?: (paddlers: Paddler[]) => void;
+  selected: Paddler[];
+  onSelectionChange: (paddlers: Paddler[]) => void;
   onPrimaryClicked?: (() => void) | null;
   primaryButtonText?: string;
   onSecondaryClicked?: (() => void) | null;
@@ -15,15 +14,13 @@ interface TableProps {
 
 function PaddlerTable({
   paddlers,
-  initialSelection,
-  onChecked,
+  selected,
+  onSelectionChange,
   onPrimaryClicked = null,
   primaryButtonText = "Primary",
   onSecondaryClicked = null,
   secondaryButtonText = "Secondary",
 }: TableProps) {
-  const [selected, setSelected] = useState<Paddler[]>(initialSelection);
-
   const allSelected =
     paddlers.length > 0 &&
     paddlers.every((p) =>
@@ -31,16 +28,14 @@ function PaddlerTable({
     );
 
   const onPaddlerChecked = (paddler: Paddler) => {
-    setSelected((current) =>
-      current.some((selectedPaddler) => selectedPaddler.id === paddler.id)
-        ? current.filter((selectedPaddler) => selectedPaddler.id !== paddler.id)
-        : [...current, paddler],
+    onSelectionChange(
+      selected.some((selectedPaddler) => selectedPaddler.id === paddler.id)
+        ? selected.filter(
+            (selectedPaddler) => selectedPaddler.id !== paddler.id,
+          )
+        : [...selected, paddler],
     );
   };
-
-  useEffect(() => {
-    onChecked?.(selected);
-  }, [onChecked, selected]);
 
   return (
     <div className="paddler-table">
@@ -51,7 +46,7 @@ function PaddlerTable({
               <input
                 type="checkbox"
                 checked={allSelected}
-                onChange={() => setSelected(allSelected ? [] : paddlers)}
+                onChange={() => onSelectionChange(allSelected ? [] : paddlers)}
               />
             </th>
             <th>Name</th>

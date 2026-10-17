@@ -64,6 +64,13 @@ export default function CrewManager({
   const [updatedName, setUpdatedName] = useState(crew.name);
 
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [selectedCrewPaddlers, setSelectedCrewPaddlers] = useState<Paddler[]>(
+    [],
+  );
+
+  useEffect(() => {
+    if (addModalOpen) setSelectedCrewPaddlers(crewPaddlers);
+  }, [addModalOpen, crewPaddlers]);
 
   useEffect(() => {
     // Prevent saving on mount
@@ -467,7 +474,8 @@ export default function CrewManager({
         <AddPaddlerToCrew
           openState={[addModalOpen, setAddModalOpen]}
           paddlers={paddlers}
-          crewPaddlers={crewPaddlers}
+          selected={selectedCrewPaddlers}
+          onSelectionChange={setSelectedCrewPaddlers}
           addToRosterClicked={addToRoster}
         />
       </DndContext>
