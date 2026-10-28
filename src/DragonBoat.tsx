@@ -114,15 +114,34 @@ function DragonBoat() {
           onEdit={onEditCrew}
         />
       ) : (
-        <>
+        <div className="dragon-boat-main">
           <section className="crews">
-            <h2>Your crews</h2>
             <div className="crew-list">
-              {crews.map((c) => (
-                <button key={c.id} onClick={() => setCurrCrew(c)}>
-                  {c.name}
-                </button>
-              ))}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Crew name</th>
+                    <th>#</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crews.map((c) => (
+                    <tr key={c.id}>
+                      <td className="crew-name" onClick={() => setCurrCrew(c)}>
+                        {c.name}
+                      </td>
+                      <td>{c.roster.length}</td>
+                      <td>
+                        <div className="options">
+                          <button>Copy</button>
+                          <button>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
             <button onClick={addCrew}>Create new crew</button>
           </section>
@@ -145,7 +164,7 @@ function DragonBoat() {
               onSubmit={addPaddler}
             />
           </section>
-        </>
+        </div>
       )}
     </>
   );
