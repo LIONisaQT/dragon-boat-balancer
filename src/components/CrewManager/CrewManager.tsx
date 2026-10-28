@@ -69,6 +69,18 @@ export default function CrewManager({
   );
 
   useEffect(() => {
+    setNumRows(crew.numRows);
+    setCenterMass(crew.centerMass);
+    setRoster(crew.roster);
+    setLeftSide(crew.leftSide);
+    setRightSide(crew.rightSide);
+    setDrum(crew.drum);
+    setSteer(crew.steer);
+    setName(crew.name);
+    setUpdatedName(crew.name);
+  }, [crew]);
+
+  useEffect(() => {
     if (addModalOpen) setSelectedCrewPaddlers(crewPaddlers);
   }, [addModalOpen, crewPaddlers]);
 

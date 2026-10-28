@@ -10,11 +10,11 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
-import type { Crew, Paddler } from "../types";
+import type { Paddler, StoredCrew } from "../types";
 
 export function subscribeToTeamCrews(
   teamId: string,
-  onCrews: (crews: Crew[]) => void,
+  onCrews: (crews: StoredCrew[]) => void,
   onError: (error: Error) => void,
 ): Unsubscribe {
   const crewsRef = collection(db, "teams", teamId, "crews");
@@ -28,7 +28,7 @@ export function subscribeToTeamCrews(
             ({
               ...crewDoc.data(),
               id: crewDoc.id,
-            }) as Crew,
+            }) as StoredCrew,
         ),
       );
     },
@@ -62,7 +62,7 @@ export function subscribeToTeamPaddlers(
 
 export async function createTeamCrew(teamId: string): Promise<void> {
   const crewRef = doc(collection(db, "teams", teamId, "crews"));
-  const crew: Crew = {
+  const crew: StoredCrew = {
     id: crewRef.id,
     name: "Crew",
     numRows: 10,
@@ -77,9 +77,12 @@ export async function createTeamCrew(teamId: string): Promise<void> {
   await setDoc(crewRef, crew);
 }
 
-export async function copyTeamCrew(teamId: string, crew: Crew): Promise<void> {
+export async function copyTeamCrew(
+  teamId: string,
+  crew: StoredCrew,
+): Promise<void> {
   const crewRef = doc(collection(db, "teams", teamId, "crews"));
-  const copiedCrew: Crew = {
+  const copiedCrew: StoredCrew = {
     ...crew,
     id: crewRef.id,
     name: `Copy of ${crew.name}`,
@@ -109,7 +112,7 @@ export async function createTeamPaddler(
 
 export async function updateTeamCrew(
   teamId: string,
-  crew: Crew,
+  crew: StoredCrew,
 ): Promise<void> {
   const crewRef = doc(db, "teams", teamId, "crews", crew.id);
   await updateDoc(crewRef, crew);
@@ -125,17 +128,18 @@ export async function deleteTeamPaddlers(
   const crewsRef = collection(db, "teams", teamId, "crews");
   const crewsSnapshot = await getDocs(crewsRef);
   const crewUpdates = crewsSnapshot.docs.flatMap((crewDoc) => {
-    const crew = crewDoc.data() as Crew;
-    const roster = crew.roster.filter((paddler) => !paddlerIds.has(paddler.id));
-    const leftSide = crew.leftSide.map((paddler) =>
-      paddler && paddlerIds.has(paddler.id) ? null : paddler,
+    const crew = crewDoc.data() as StoredCrew;
+    const roster = crew.roster.filter(
+      (paddlerId) => !paddlerIds.has(paddlerId),
     );
-    const rightSide = crew.rightSide.map((paddler) =>
-      paddler && paddlerIds.has(paddler.id) ? null : paddler,
+    const leftSide = crew.leftSide.map((paddlerId) =>
+      paddlerId && paddlerIds.has(paddlerId) ? null : paddlerId,
     );
-    const drum = crew.drum && paddlerIds.has(crew.drum.id) ? null : crew.drum;
-    const steer =
-      crew.steer && paddlerIds.has(crew.steer.id) ? null : crew.steer;
+    const rightSide = crew.rightSide.map((paddlerId) =>
+      paddlerId && paddlerIds.has(paddlerId) ? null : paddlerId,
+    );
+    const drum = crew.drum && paddlerIds.has(crew.drum) ? null : crew.drum;
+    const steer = crew.steer && paddlerIds.has(crew.steer) ? null : crew.steer;
 
     const changed =
       roster.length !== crew.roster.length ||

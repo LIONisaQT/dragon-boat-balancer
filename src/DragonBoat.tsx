@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./DragonBoat.scss";
-import { Crew, Paddler } from "./types";
+import { Crew, Paddler, StoredCrew } from "./types";
 import {
   createTeamCrew,
   createTeamPaddler,
@@ -15,15 +15,60 @@ import CrewManager from "./components/CrewManager/CrewManager";
 import AddNewPaddler from "./components/Roster/AddNewPaddler";
 import PaddlerTable from "./components/PaddlerTable/PaddlerTable";
 
+function resolveCrew(
+  crew: StoredCrew,
+  paddlersById: Map<string, Paddler>,
+): { crew: Crew; missingPaddlerIds: string[] } {
+  const missingPaddlerIds = new Set<string>();
+  const resolvePaddler = (paddlerId: string): Paddler => {
+    const paddler = paddlersById.get(paddlerId);
+    if (!paddler) missingPaddlerIds.add(paddlerId);
+    return (
+      paddler ?? {
+        id: paddlerId,
+        name: "",
+        side: "both",
+        power: 0,
+        weight: 0,
+        height: 0,
+      }
+    );
+  };
+
+  return {
+    crew: {
+      ...crew,
+      roster: crew.roster.map(resolvePaddler),
+      leftSide: crew.leftSide.map((id) => (id ? resolvePaddler(id) : null)),
+      rightSide: crew.rightSide.map((id) => (id ? resolvePaddler(id) : null)),
+      drum: crew.drum ? resolvePaddler(crew.drum) : null,
+      steer: crew.steer ? resolvePaddler(crew.steer) : null,
+    },
+    missingPaddlerIds: [...missingPaddlerIds],
+  };
+}
+
+function storeCrew(crew: Crew): StoredCrew {
+  return {
+    ...crew,
+    roster: crew.roster.map((paddler) => paddler.id),
+    leftSide: crew.leftSide.map((paddler) => paddler?.id ?? null),
+    rightSide: crew.rightSide.map((paddler) => paddler?.id ?? null),
+    drum: crew.drum?.id ?? null,
+    steer: crew.steer?.id ?? null,
+  };
+}
+
 function DragonBoat() {
   const [teamId, setTeamId] = useState("");
-  const [crews, setCrews] = useState<Crew[]>([]);
+  const [crews, setCrews] = useState<StoredCrew[]>([]);
   const [paddlers, setPaddlers] = useState<Paddler[]>([]);
+  const [paddlersLoaded, setPaddlersLoaded] = useState(false);
   const [selected, setSelected] = useState<Paddler[]>([]);
   const [renamingCrewId, setRenamingCrewId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
 
-  const [currCrew, setCurrCrew] = useState<Crew | undefined>(undefined);
+  const [currCrewId, setCurrCrewId] = useState<string | null>(null);
 
   const [addModalOpen, setModalOpen] = useState(false);
 
@@ -38,15 +83,21 @@ function DragonBoat() {
 
     setCrews([]);
     setPaddlers([]);
+    setPaddlersLoaded(false);
 
     const unsubscribeCrews = subscribeToTeamCrews(teamId, setCrews, (error) =>
       console.error(`Failed to load crews for team ${teamId}:`, error),
     );
     const unsubscribePaddlers = subscribeToTeamPaddlers(
       teamId,
-      setPaddlers,
-      (error) =>
-        console.error(`Failed to load paddlers for team ${teamId}:`, error),
+      (teamPaddlers) => {
+        setPaddlers(teamPaddlers);
+        setPaddlersLoaded(true);
+      },
+      (error) => {
+        console.error(`Failed to load paddlers for team ${teamId}:`, error);
+        setPaddlersLoaded(true);
+      },
     );
 
     return () => {
@@ -80,7 +131,7 @@ function DragonBoat() {
     }
   };
 
-  const copyCrew = async (crew: Crew) => {
+  const copyCrew = async (crew: StoredCrew) => {
     if (!teamId) return;
 
     try {
@@ -94,7 +145,7 @@ function DragonBoat() {
     }
   };
 
-  const saveCrewName = async (crew: Crew) => {
+  const saveCrewName = async (crew: StoredCrew) => {
     if (!teamId) return;
 
     try {
@@ -139,7 +190,7 @@ function DragonBoat() {
       if (!teamId) return;
 
       try {
-        await updateTeamCrew(teamId, updatedCrew);
+        await updateTeamCrew(teamId, storeCrew(updatedCrew));
         console.log(`Crew ${updatedCrew.id} updated successfully`);
       } catch (error) {
         console.error("Error editing crew:", error);
@@ -149,19 +200,50 @@ function DragonBoat() {
     [teamId],
   );
 
-  const onCloseClicked = () => setCurrCrew(undefined);
+  const onCloseClicked = () => setCurrCrewId(null);
+  const paddlersById = useMemo(
+    () => new Map(paddlers.map((paddler) => [paddler.id, paddler])),
+    [paddlers],
+  );
+  const storedCurrCrew = crews.find((crew) => crew.id === currCrewId);
+  const resolvedCurrCrew = useMemo(
+    () =>
+      storedCurrCrew && paddlersLoaded
+        ? resolveCrew(storedCurrCrew, paddlersById)
+        : undefined,
+    [storedCurrCrew, paddlersLoaded, paddlersById],
+  );
 
   return (
     <>
       <h1>Dragon Boat</h1>
       <p>Team ID: {teamId}</p>
-      {currCrew ? (
-        <CrewManager
-          paddlers={paddlers}
-          crew={currCrew}
-          onClose={onCloseClicked}
-          onEdit={onEditCrew}
-        />
+      {currCrewId ? (
+        !paddlersLoaded ? (
+          <p>Loading crew paddlers...</p>
+        ) : !storedCurrCrew ? (
+          <section>
+            <p>This crew is no longer available.</p>
+            <button onClick={onCloseClicked}>Back to crews</button>
+          </section>
+        ) : resolvedCurrCrew &&
+          resolvedCurrCrew.missingPaddlerIds.length > 0 ? (
+          <section>
+            <p>
+              This crew refers to paddlers that are missing from the team:{" "}
+              {resolvedCurrCrew.missingPaddlerIds.join(", ")}
+            </p>
+            <button onClick={onCloseClicked}>Back to crews</button>
+          </section>
+        ) : resolvedCurrCrew ? (
+          <CrewManager
+            key={storedCurrCrew.id}
+            paddlers={paddlers}
+            crew={resolvedCurrCrew.crew}
+            onClose={onCloseClicked}
+            onEdit={onEditCrew}
+          />
+        ) : null
       ) : (
         <div className="dragon-boat-main">
           <section className="crews">
@@ -170,7 +252,6 @@ function DragonBoat() {
                 <thead>
                   <tr>
                     <th>Crew name</th>
-                    <th>#</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -180,7 +261,7 @@ function DragonBoat() {
                       <td
                         className="crew-name"
                         onClick={() => {
-                          if (renamingCrewId !== c.id) setCurrCrew(c);
+                          if (renamingCrewId !== c.id) setCurrCrewId(c.id);
                         }}
                       >
                         {renamingCrewId === c.id ? (
@@ -207,7 +288,6 @@ function DragonBoat() {
                           c.name
                         )}
                       </td>
-                      <td>{c.roster.length}</td>
                       <td>
                         <div className="options">
                           <button

@@ -30,3 +30,14 @@ export type Crew = {
   steer: Paddler | null;
   roster: Paddler[];
 };
+
+export type StoredCrew = Omit<
+  Crew,
+  "leftSide" | "rightSide" | "drum" | "steer" | "roster"
+> & {
+  leftSide: (string | null)[];
+  rightSide: (string | null)[];
+  drum: string | null;
+  steer: string | null;
+  roster: string[];
+};
