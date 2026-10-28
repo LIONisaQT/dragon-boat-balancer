@@ -10,12 +10,22 @@
   table {
     width: 100%;
     border-spacing: 0;
+    font-size: 1.125rem;
 
     td {
       padding: 8px 0;
     }
 
     tbody {
+      cursor: pointer;
+      transition: filter 0.1s ease-out;
+
+      tr {
+        &:hover {
+          filter: brightness(1.1);
+        }
+      }
+
       tr:nth-child(odd) {
         background-color: var(--dark);
       }

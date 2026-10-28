@@ -6,6 +6,7 @@ interface TableProps {
   paddlers: Paddler[];
   selected: Paddler[];
   onSelectionChange: (paddlers: Paddler[]) => void;
+  onPaddlerClicked?: ((paddler: Paddler) => void) | null;
   onPrimaryClicked?: (() => void) | null;
   primaryButtonText?: string;
   onSecondaryClicked?: (() => void) | null;
@@ -16,6 +17,7 @@ function PaddlerTable({
   paddlers,
   selected,
   onSelectionChange,
+  onPaddlerClicked = null,
   onPrimaryClicked = null,
   primaryButtonText = "Primary",
   onSecondaryClicked = null,
@@ -56,11 +58,12 @@ function PaddlerTable({
         </thead>
         <tbody>
           {paddlers.map((p) => (
-            <tr key={p.id}>
+            <tr key={p.id} onClick={() => onPaddlerClicked?.(p)}>
               <td>
                 <input
                   type="checkbox"
                   checked={selected.some((paddler) => paddler.id === p.id)}
+                  onClick={(event) => event.stopPropagation()}
                   onChange={() => onPaddlerChecked(p)}
                 />
               </td>

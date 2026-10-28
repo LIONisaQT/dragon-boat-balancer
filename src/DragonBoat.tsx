@@ -70,6 +70,7 @@ function DragonBoat() {
 
   const [currCrewId, setCurrCrewId] = useState<string | null>(null);
 
+  const [clickedPaddler, setClickedPaddler] = useState<Paddler | null>(null);
   const [addModalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
@@ -167,6 +168,7 @@ function DragonBoat() {
 
     try {
       await createTeamPaddler(teamId, paddler);
+      setModalOpen(false);
     } catch (error) {
       console.error(`Failed to create paddler for team ${teamId}:`, error);
       alert("Failed to add paddler");
@@ -213,6 +215,16 @@ function DragonBoat() {
         : undefined,
     [storedCurrCrew, paddlersLoaded, paddlersById],
   );
+
+  const onPaddlerClicked = (paddler: Paddler) => {
+    setClickedPaddler(paddler);
+    setModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (addModalOpen) return;
+    setClickedPaddler(null);
+  }, [addModalOpen]);
 
   return (
     <>
@@ -266,6 +278,7 @@ function DragonBoat() {
                       >
                         {renamingCrewId === c.id ? (
                           <input
+                            className="text-input"
                             autoFocus
                             value={renameDraft}
                             onChange={(event) =>
@@ -373,6 +386,7 @@ function DragonBoat() {
               paddlers={paddlers}
               selected={selected}
               onSelectionChange={setSelected}
+              onPaddlerClicked={onPaddlerClicked}
               onPrimaryClicked={() => setModalOpen(true)}
               primaryButtonText="Add paddler"
               onSecondaryClicked={
@@ -382,7 +396,7 @@ function DragonBoat() {
             />
             <AddNewPaddler
               openState={[addModalOpen, setModalOpen]}
-              paddler={null}
+              paddler={clickedPaddler}
               onSubmit={addPaddler}
             />
           </section>
