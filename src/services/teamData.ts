@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDocs,
   onSnapshot,
@@ -74,6 +75,14 @@ export async function createTeamCrew(teamId: string): Promise<void> {
   };
 
   await setDoc(crewRef, crew);
+}
+
+export async function deleteTeamCrew(
+  teamId: string,
+  crewId: string,
+): Promise<void> {
+  const crewRef = doc(db, "teams", teamId, "crews", crewId);
+  await deleteDoc(crewRef);
 }
 
 export async function createTeamPaddler(
