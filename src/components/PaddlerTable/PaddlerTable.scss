@@ -9,6 +9,21 @@
 
   table {
     width: 100%;
+    border-spacing: 0;
+
+    td {
+      padding: 8px 0;
+    }
+
+    tbody {
+      tr:nth-child(odd) {
+        background-color: var(--dark);
+      }
+
+      tr:nth-child(even) {
+        background-color: var(--darker);
+      }
+    }
   }
 
   thead {

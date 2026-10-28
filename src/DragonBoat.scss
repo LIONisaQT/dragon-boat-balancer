@@ -9,6 +9,7 @@
 .crews {
   display: flex;
   flex-direction: column;
+  gap: 24px;
 }
 
 .crew-list {
@@ -32,11 +33,6 @@
 
     th:nth-child(2),
     td:nth-child(2) {
-      width: 10%;
-    }
-
-    th:nth-child(3),
-    td:nth-child(3) {
       width: 1%;
       white-space: nowrap;
     }
@@ -67,9 +63,46 @@
   .options {
     display: flex;
     gap: 12px;
+    padding-right: 16px;
+
+    button {
+      width: 32px;
+      height: 32px;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .delete {
+      background-color: var(--red);
+      color: var(--light);
+    }
   }
 
-  .crew-name:hover {
+  .crew-name {
     cursor: pointer;
+  }
+}
+
+button {
+  height: 36px;
+  border: none;
+  border-radius: 32px;
+  cursor: pointer;
+  transition: all 0.1s ease-out;
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.9);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 }
