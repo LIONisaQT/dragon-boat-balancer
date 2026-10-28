@@ -20,6 +20,8 @@ function DragonBoat() {
   const [crews, setCrews] = useState<Crew[]>([]);
   const [paddlers, setPaddlers] = useState<Paddler[]>([]);
   const [selected, setSelected] = useState<Paddler[]>([]);
+  const [renamingCrewId, setRenamingCrewId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
 
   const [currCrew, setCurrCrew] = useState<Crew | undefined>(undefined);
 
@@ -92,6 +94,23 @@ function DragonBoat() {
     }
   };
 
+  const saveCrewName = async (crew: Crew) => {
+    if (!teamId) return;
+
+    try {
+      await updateTeamCrew(teamId, { ...crew, name: renameDraft });
+      setRenamingCrewId((currentId) =>
+        currentId === crew.id ? null : currentId,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to rename crew ${crew.id} for team ${teamId}:`,
+        error,
+      );
+      alert("Failed to rename crew");
+    }
+  };
+
   const addPaddler = async (paddler: Paddler) => {
     if (!teamId) return;
 
@@ -158,12 +177,47 @@ function DragonBoat() {
                 <tbody>
                   {crews.map((c) => (
                     <tr key={c.id}>
-                      <td className="crew-name" onClick={() => setCurrCrew(c)}>
-                        {c.name}
+                      <td
+                        className="crew-name"
+                        onClick={() => {
+                          if (renamingCrewId !== c.id) setCurrCrew(c);
+                        }}
+                      >
+                        {renamingCrewId === c.id ? (
+                          <input
+                            autoFocus
+                            value={renameDraft}
+                            onChange={(event) =>
+                              setRenameDraft(event.target.value)
+                            }
+                            onClick={(event) => event.stopPropagation()}
+                            onBlur={() =>
+                              setRenamingCrewId((currentId) =>
+                                currentId === c.id ? null : currentId,
+                              )
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                void saveCrewName(c);
+                              }
+                            }}
+                          />
+                        ) : (
+                          c.name
+                        )}
                       </td>
                       <td>{c.roster.length}</td>
                       <td>
                         <div className="options">
+                          <button
+                            onClick={() => {
+                              setRenameDraft(c.name);
+                              setRenamingCrewId(c.id);
+                            }}
+                          >
+                            Rename
+                          </button>
                           <button onClick={() => copyCrew(c)}>Copy</button>
                           <button onClick={() => deleteCrew(c.id)}>
                             Delete
