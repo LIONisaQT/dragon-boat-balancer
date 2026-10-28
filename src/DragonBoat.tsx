@@ -229,7 +229,6 @@ function DragonBoat() {
   return (
     <>
       <h1>Dragon Boat</h1>
-      <p>Team ID: {teamId}</p>
       {currCrewId ? (
         !paddlersLoaded ? (
           <p>Loading crew paddlers...</p>
@@ -258,6 +257,7 @@ function DragonBoat() {
         ) : null
       ) : (
         <div className="dragon-boat-main">
+          <p>Team ID: {teamId}</p>
           <section className="crews">
             <div className="crew-list">
               <table>
@@ -388,7 +388,7 @@ function DragonBoat() {
               onSelectionChange={setSelected}
               onPaddlerClicked={onPaddlerClicked}
               onPrimaryClicked={() => setModalOpen(true)}
-              primaryButtonText="Add paddler"
+              primaryButtonText="Create new paddler"
               onSecondaryClicked={
                 selected.length > 0 ? () => deletePaddlers(selected) : null
               }

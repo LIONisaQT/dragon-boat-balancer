@@ -4,6 +4,10 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+
+  @media (max-width: 768px) {
+    margin: 0 12px;
+  }
 }
 
 .crews {
@@ -118,9 +122,9 @@ button {
 
 .text-input {
   border: none;
-  outline: 2px solid var(--orange);
+  outline: 2px solid var(--light-muted);
   border-radius: 32px;
   padding-left: 8px;
-  background-color: var(--dark);
+  background-color: var(--darkest);
   color: var(--light);
 }

@@ -46,6 +46,7 @@ function PaddlerTable({
           <tr>
             <th>
               <input
+                className="table-checkbox"
                 type="checkbox"
                 checked={allSelected}
                 onChange={() => onSelectionChange(allSelected ? [] : paddlers)}
@@ -61,6 +62,7 @@ function PaddlerTable({
             <tr key={p.id} onClick={() => onPaddlerClicked?.(p)}>
               <td>
                 <input
+                  className="table-checkbox"
                   type="checkbox"
                   checked={selected.some((paddler) => paddler.id === p.id)}
                   onClick={(event) => event.stopPropagation()}
