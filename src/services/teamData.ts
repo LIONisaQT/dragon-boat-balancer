@@ -77,6 +77,20 @@ export async function createTeamCrew(teamId: string): Promise<void> {
   await setDoc(crewRef, crew);
 }
 
+export async function copyTeamCrew(teamId: string, crew: Crew): Promise<void> {
+  const crewRef = doc(collection(db, "teams", teamId, "crews"));
+  const copiedCrew: Crew = {
+    ...crew,
+    id: crewRef.id,
+    name: `Copy of ${crew.name}`,
+    leftSide: [...crew.leftSide],
+    rightSide: [...crew.rightSide],
+    roster: [...crew.roster],
+  };
+
+  await setDoc(crewRef, copiedCrew);
+}
+
 export async function deleteTeamCrew(
   teamId: string,
   crewId: string,

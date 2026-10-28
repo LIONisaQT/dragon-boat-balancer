@@ -4,6 +4,7 @@ import { Crew, Paddler } from "./types";
 import {
   createTeamCrew,
   createTeamPaddler,
+  copyTeamCrew,
   deleteTeamCrew,
   deleteTeamPaddlers,
   subscribeToTeamCrews,
@@ -74,6 +75,20 @@ function DragonBoat() {
         error,
       );
       alert("Failed to delete crew");
+    }
+  };
+
+  const copyCrew = async (crew: Crew) => {
+    if (!teamId) return;
+
+    try {
+      await copyTeamCrew(teamId, crew);
+    } catch (error) {
+      console.error(
+        `Failed to copy crew ${crew.id} for team ${teamId}:`,
+        error,
+      );
+      alert("Failed to copy crew");
     }
   };
 
@@ -149,7 +164,7 @@ function DragonBoat() {
                       <td>{c.roster.length}</td>
                       <td>
                         <div className="options">
-                          <button>Copy</button>
+                          <button onClick={() => copyCrew(c)}>Copy</button>
                           <button onClick={() => deleteCrew(c.id)}>
                             Delete
                           </button>
