@@ -75,7 +75,7 @@ export default function AddNewPaddler({
             <option value="both">Both</option>
           </select>
         </section>
-        <section>
+        {/* <section>
           <label htmlFor="power">Power</label>
           <input
             type="number"
@@ -112,7 +112,7 @@ export default function AddNewPaddler({
               }
             }}
           ></input>
-        </section>
+        </section> */}
         <section>
           <label htmlFor="weight">Weight</label>
           <input
@@ -151,7 +151,7 @@ export default function AddNewPaddler({
             }}
           ></input>
         </section>
-        <section>
+        {/* <section>
           <label htmlFor="height">Height</label>
           <input
             type="number"
@@ -188,7 +188,7 @@ export default function AddNewPaddler({
               }
             }}
           ></input>
-        </section>
+        </section> */}
         <div className="button-group">
           <button
             onClick={() =>
