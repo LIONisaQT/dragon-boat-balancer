@@ -35,20 +35,6 @@
     }
   }
 
-  .crew-id {
-    padding: 2px 16px;
-    color: var(--light-muted);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-
-    svg {
-      width: 1rem;
-      height: 1rem;
-    }
-  }
-
   .crew-manager {
     display: flex;
     flex-direction: row;
