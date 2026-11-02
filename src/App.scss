@@ -140,6 +140,16 @@
   }
 }
 
+.paddlers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  h2 {
+    text-align: left;
+  }
+}
+
 button {
   height: 36px;
   border: none;
