@@ -10,6 +10,7 @@ import {
   subscribeToTeamCrews,
   subscribeToTeamPaddlers,
   updateTeamCrew,
+  teamExists,
 } from "./services/teamData";
 import CrewManager from "./components/CrewManager/CrewManager";
 import AddNewPaddler from "./components/Roster/AddNewPaddler";
@@ -61,6 +62,8 @@ function storeCrew(crew: Crew): StoredCrew {
 
 function DragonBoat() {
   const [teamId, setTeamId] = useState("");
+  const [isEditingTeamId, setIsEditingTeamId] = useState(false);
+  const [teamIdDraft, setTeamIdDraft] = useState("");
   const [crews, setCrews] = useState<StoredCrew[]>([]);
   const [paddlers, setPaddlers] = useState<Paddler[]>([]);
   const [paddlersLoaded, setPaddlersLoaded] = useState(false);
@@ -234,6 +237,35 @@ function DragonBoat() {
     }
   };
 
+  const submitTeamId = async () => {
+    const incomingTeamId = teamIdDraft.trim();
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(incomingTeamId)) {
+      alert("The team ID pattern does not match a valid UUID.");
+      return;
+    }
+
+    try {
+      if (!(await teamExists(incomingTeamId))) {
+        alert(`The team with UUID ${incomingTeamId} could not be found.`);
+        return;
+      }
+
+      localStorage.setItem("localTeamId", incomingTeamId);
+      setCurrCrewId(null);
+      setSelected([]);
+      setRenamingCrewId(null);
+      setClickedPaddler(null);
+      setModalOpen(false);
+      setTeamId(incomingTeamId);
+      setIsEditingTeamId(false);
+    } catch (error) {
+      console.error(`Failed to load team ${incomingTeamId}:`, error);
+      alert("Failed to load the team");
+    }
+  };
+
   return (
     <>
       <h1>Dragon Boat</h1>
@@ -265,26 +297,93 @@ function DragonBoat() {
         ) : null
       ) : (
         <div className="dragon-boat-main">
-          <button
-            className="team-id"
-            onClick={() => copyTeamIdToClipboard(teamId)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <section className="team-id-section">
+            {isEditingTeamId ? (
+              <input
+                className="team-id team-id-input text-input"
+                autoFocus
+                value={teamIdDraft}
+                onChange={(event) => setTeamIdDraft(event.target.value)}
+                onBlur={() => setIsEditingTeamId(false)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void submitTeamId();
+                  } else if (event.key === "Escape") {
+                    setIsEditingTeamId(false);
+                  }
+                }}
+                aria-label="Team ID"
+              />
+            ) : (
+              <button
+                className="team-id"
+                onClick={() => copyTeamIdToClipboard(teamId)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                {teamId}
+              </button>
+            )}
+            <button
+              className="team-id-action"
+              aria-label={isEditingTeamId ? "Go to team" : "Edit team ID"}
+              title={isEditingTeamId ? "Go to team" : "Edit team ID"}
+              onMouseDown={(event) => {
+                if (isEditingTeamId) event.preventDefault();
+              }}
+              onClick={() => {
+                if (isEditingTeamId) {
+                  void submitTeamId();
+                } else {
+                  setTeamIdDraft(teamId);
+                  setIsEditingTeamId(true);
+                }
+              }}
             >
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            {teamId}
-          </button>
+              {isEditingTeamId ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.5 12h15m0 0-6.75-6.75M19.5 12l-6.75 6.75"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+                  />
+                </svg>
+              )}
+            </button>
+          </section>
           <section className="crews">
             <div className="crew-list">
               <table>

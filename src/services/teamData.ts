@@ -36,6 +36,15 @@ export function subscribeToTeamCrews(
   );
 }
 
+export async function teamExists(teamId: string): Promise<boolean> {
+  const [crewsSnapshot, paddlersSnapshot] = await Promise.all([
+    getDocs(collection(db, "teams", teamId, "crews")),
+    getDocs(collection(db, "teams", teamId, "paddlers")),
+  ]);
+
+  return !crewsSnapshot.empty || !paddlersSnapshot.empty;
+}
+
 export function subscribeToTeamPaddlers(
   teamId: string,
   onPaddlers: (paddlers: Paddler[]) => void,

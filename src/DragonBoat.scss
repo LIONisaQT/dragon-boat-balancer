@@ -10,15 +10,40 @@
   }
 }
 
-.team-id {
-  padding: 2px 16px;
-  color: var(--light-muted);
+.team-id-section {
   display: flex;
   flex-direction: row;
-  align-items: center;
   gap: 4px;
-  width: fit-content;
   margin: 0 auto;
+
+  button {
+    color: var(--light-muted);
+  }
+
+  .team-id {
+    padding: 2px 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+  }
+
+  .team-id-input {
+    width: min(24rem, calc(100vw - 96px));
+    min-width: 0;
+    border: 1px solid var(--light-muted);
+    border-radius: 32px;
+    background-color: var(--darkest);
+    color: var(--light);
+    font: inherit;
+  }
+
+  .team-id-action {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+  }
 
   svg {
     width: 1rem;
