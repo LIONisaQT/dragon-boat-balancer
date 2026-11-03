@@ -31,8 +31,13 @@ export type Crew = {
   roster: Paddler[];
 };
 
-export type BoatPaddler = {
-  details: Paddler;
-  location: PaddlerLocation;
-  position: PaddlerPosition;
+export type StoredCrew = Omit<
+  Crew,
+  "leftSide" | "rightSide" | "drum" | "steer" | "roster"
+> & {
+  leftSide: (string | null)[];
+  rightSide: (string | null)[];
+  drum: string | null;
+  steer: string | null;
+  roster: string[];
 };

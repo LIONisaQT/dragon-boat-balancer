@@ -31,36 +31,6 @@ export const getCenterOfMass = (
   return Number((weightedSum / totalWeight + 1).toFixed(2));
 };
 
-function getSectionMultiplier(
-  paddlerRow: number,
-  _targetRow: number,
-  numRows: number,
-): number {
-  const rowsPerSection = numRows / 3;
-
-  let section: "front" | "middle" | "back";
-  if (paddlerRow <= rowsPerSection) {
-    section = "front";
-  } else if (paddlerRow <= rowsPerSection * 2) {
-    section = "middle";
-  } else {
-    section = "back";
-  }
-
-  const strategy = {
-    front: 1.2,
-    middle: 1.5,
-    back: 1.0,
-  };
-
-  return strategy[section];
-}
-
-//power multiplier = 2
-//balance multiplier = 1.5
-//fBscore multiplier = 1
-//happiness multiplier = 1
-//Score = (Power × 2) - (Balance × 1.5) - (FBscore × 1) + (Happiness × 1)
 export const generateScore = (
   paddler: Paddler,
   targetRow: number,
@@ -68,86 +38,31 @@ export const generateScore = (
   left: SideArray,
   right: SideArray,
 ): number => {
-  const powerMultiplier = 2;
   const balanceMultiplier = 1.5;
-  const fbScoreMultiplier = 1;
-  const happinessMultiplier = 1;
 
   const weightImbalance = Math.abs(sumSideWeight(left) - sumSideWeight(right));
-
   const com = getCenterOfMass(left, right, numRows);
   const comDistance = Math.abs(com - targetRow);
-
-  // Determine which side the paddler is actually placed on
-  const isOnLeft = left.indexOf(paddler) !== -1;
-  const isOnRight = right.indexOf(paddler) !== -1;
-  const actualSide = isOnLeft ? "left" : isOnRight ? "right" : null;
-
-  // Check if paddler is on their preferred side
-  const isOnPreferredSide =
-    paddler.side === "both" ||
-    (paddler.side === "left" && actualSide === "left") ||
-    (paddler.side === "right" && actualSide === "right");
-  const sidePenalty = isOnPreferredSide ? 0 : 0.15;
-  const effectivePower = paddler.power * (1 - sidePenalty);
-
-  let paddlerRow = left.indexOf(paddler);
-  if (paddlerRow === -1) {
-    paddlerRow = right.indexOf(paddler);
-  }
-  const sectionMultiplier = getSectionMultiplier(
-    paddlerRow,
-    targetRow,
-    numRows,
-  );
-  const weightedPower = effectivePower * sectionMultiplier;
-
-  const happiness = isOnPreferredSide ? 1 : 0;
-
-  const powerScore = weightedPower * powerMultiplier;
   const balancePenalty = weightImbalance * balanceMultiplier;
-  const comPenalty = comDistance * fbScoreMultiplier;
-  const happinessBonus = happiness * happinessMultiplier;
-  const finalScore = powerScore - balancePenalty - comPenalty + happinessBonus;
+  const score = balancePenalty + comDistance;
 
   console.log(`[generateScore] ${paddler.name}:`, {
-    preferredSide: paddler.side,
-    actualSide,
-    isOnPreferredSide,
-    sidePenalty: sidePenalty * 100 + "%",
-    basePower: paddler.power,
-    effectivePower: effectivePower.toFixed(2),
-    paddlerRow,
-    sectionMultiplier,
-    weightedPower: weightedPower.toFixed(2),
     weightImbalance: weightImbalance.toFixed(2),
+    balancePenalty: balancePenalty.toFixed(2),
     com,
     comDistance: comDistance.toFixed(2),
     targetRow,
-    happiness,
-    scoreBreakdown: {
-      powerScore: powerScore.toFixed(2),
-      balancePenalty: `-${balancePenalty.toFixed(2)}`,
-      comPenalty: `-${comPenalty.toFixed(2)}`,
-      happinessBonus: `+${happinessBonus.toFixed(2)}`,
-      finalScore: finalScore.toFixed(2),
-    },
+    score,
   });
 
-  return finalScore;
+  return score;
 };
 
 /**
- * Greedy algorithm to find the optimal position of a paddler, respecting
- * their side preference.
+ * Greedy algorithm that prioritizes weight balance, then side preference.
  *
- *
- * Fills seat, then checks weight balance + boat's center of mass.
- *
- * Lower score is better, since that means placing a paddler there gets the
- * boat closer to the desired target.
- *
- * TODO: Factor paddler height and power level.
+ * Lower scores indicate better weight balance. Side preference is used only
+ * to break ties between positions with the same score.
  *
  * @param {Paddler[]} roster - List of paddlers.
  * @param {number} targetRow - Row where center of mass is located at.
@@ -175,17 +90,18 @@ export const generateLineup = (
 
   for (const paddler of sortedPaddlers) {
     console.log(
-      `\n[generateLineup] Evaluating paddler: ${paddler.name} (weight: ${paddler.weight}, power: ${paddler.power}, side: ${paddler.side})`,
+      `\n[generateLineup] Evaluating paddler: ${paddler.name} (weight: ${paddler.weight}, side: ${paddler.side})`,
     );
 
     const candidatePositions: Array<{
       side: "left" | "right";
       index: number;
       score: number;
+      sidePreferencePenalty: number;
     }> = [];
 
     for (let i = 0; i < numRows; i++) {
-      if ((paddler.side === "left" || paddler.side === "both") && !left[i]) {
+      if (!left[i]) {
         const tempLeft = [...left];
         tempLeft[i] = paddler;
         const score = generateScore(
@@ -195,10 +111,16 @@ export const generateLineup = (
           tempLeft,
           right,
         );
-        candidatePositions.push({ side: "left", index: i, score });
+        candidatePositions.push({
+          side: "left",
+          index: i,
+          score,
+          sidePreferencePenalty:
+            paddler.side !== "both" && paddler.side !== "left" ? 1 : 0,
+        });
       }
 
-      if ((paddler.side === "right" || paddler.side === "both") && !right[i]) {
+      if (!right[i]) {
         const tempRight = [...right];
         tempRight[i] = paddler;
         const score = generateScore(
@@ -208,7 +130,13 @@ export const generateLineup = (
           left,
           tempRight,
         );
-        candidatePositions.push({ side: "right", index: i, score });
+        candidatePositions.push({
+          side: "right",
+          index: i,
+          score,
+          sidePreferencePenalty:
+            paddler.side !== "both" && paddler.side !== "right" ? 1 : 0,
+        });
       }
     }
 
@@ -220,8 +148,11 @@ export const generateLineup = (
       continue;
     }
 
-    // Get their best position (greedy) - higher score is better.
-    candidatePositions.sort((a, b) => b.score - a.score);
+    // Weight balance wins; side preference breaks ties.
+    candidatePositions.sort(
+      (a, b) =>
+        a.score - b.score || a.sidePreferencePenalty - b.sidePreferencePenalty,
+    );
     const best = candidatePositions[0];
 
     console.log(

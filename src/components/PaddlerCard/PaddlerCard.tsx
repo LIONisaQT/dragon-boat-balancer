@@ -1,39 +1,21 @@
 import "./PaddlerCard.scss";
-import { BoatPaddler, Paddler, PaddlerLocation } from "../../types";
+import { Paddler, PaddlerLocation } from "../../types";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { useEffect, useRef, useState } from "react";
-import { useOnClickOutside } from "../../hooks/useOnClickOutside";
 
 interface PaddlerProps {
   details: Paddler | null;
   location: PaddlerLocation;
   position: number | "drum" | "steer";
-  onClick: (paddler: BoatPaddler) => void;
-  onEdit: () => void;
-  onDelete: (
-    paddler: Paddler,
-    location: PaddlerLocation,
-    position: number | "drum" | "steer",
-  ) => void;
 }
 
 export default function PaddlerCard({
   details,
   position,
   location,
-  onClick,
-  onEdit,
-  onDelete,
 }: PaddlerProps) {
-  const [isPopupOpen, setPopupOpen] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
-  useOnClickOutside(
-    cardRef,
-    () => setPopupOpen((prev) => !prev),
-    () => setPopupOpen(false),
-    [popupRef],
-  );
+  const id = details
+    ? `paddler-${details.id}`
+    : `empty-${location}-${position}`;
 
   const {
     attributes,
@@ -43,11 +25,7 @@ export default function PaddlerCard({
     isDragging,
     over,
   } = useDraggable({
-    id: `${
-      details
-        ? `paddler-${details.name}-${location}-${position}`
-        : `empty-${location}-${position}`
-    }`,
+    id,
     data: { details, position, location },
     disabled: !details,
   });
@@ -59,11 +37,7 @@ export default function PaddlerCard({
     : undefined;
 
   const { isOver, setNodeRef: setDroppableNodeRef } = useDroppable({
-    id: `${
-      details
-        ? `paddler-${details.name}-${location}-${position}`
-        : `empty-${location}-${position}`
-    }`,
+    id,
     data: { details, position, location },
   });
 
@@ -72,31 +46,23 @@ export default function PaddlerCard({
     setDroppableNodeRef(node);
   };
 
-  useEffect(() => {
-    if (isDragging) setPopupOpen(false);
-  }, [isDragging]);
-
   return (
     <div
       ref={setNodeRef}
-      className={`paddler-card ${details ? "details" : "empty"} ${
-        isDragging ? `dragging ${over ? "" : "return"}` : ""
-      } ${isOver ? "dragged-over" : ""}`}
+      className={`paddler-card ${
+        details ? "paddler-card--details" : "paddler-card--empty"
+      } ${
+        isDragging
+          ? `paddler-card--dragging ${over ? "" : "paddler-card--return"}`
+          : ""
+      } ${isOver ? "paddler-card--dragged-over" : ""}`}
       style={style}
       {...listeners}
       {...attributes}
     >
       {details ? (
-        <div
-          className="info-card"
-          ref={cardRef}
-          onClick={() => onClick({ details, location, position })}
-        >
+        <div className="info-card">
           <p className="name-container">
-            {typeof position === "number" &&
-            (location === "left" || location === "right") ? (
-              <span>{position + 1}. </span>
-            ) : null}
             <span className="name">{details.name}</span>
           </p>
           <div className="info">
@@ -104,8 +70,6 @@ export default function PaddlerCard({
               {details.side[0].toUpperCase()}
             </p>
             <p className="weight">{details.weight}</p>
-            <p className="power">{details.power}</p>
-            <p className="height">{details.height}</p>
           </div>
         </div>
       ) : (
@@ -117,20 +81,6 @@ export default function PaddlerCard({
           </p>
         </div>
       )}
-      <div
-        ref={popupRef}
-        className={`popup-container ${isPopupOpen ? "" : "hidden"}`}
-      >
-        <button onClick={() => details && onEdit()} title="Edit">
-          ✍️
-        </button>
-        <button
-          onClick={() => details && onDelete(details, location, position)}
-          title="Delete"
-        >
-          🗑️
-        </button>
-      </div>
     </div>
   );
 }

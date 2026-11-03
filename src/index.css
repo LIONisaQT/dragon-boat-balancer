@@ -1,36 +1,46 @@
 @import url("./colors.css");
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
+  --font-size-body: 1rem;
+  --font-size-control: 1rem;
+  --font-size-h1: 2rem;
+  --font-size-h2: 1.5rem;
+  --font-size-h3: 1.25rem;
+  --font-size-h4: 1.125rem;
+
   font-synthesis: none;
   font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  background: var(--darkest);
-  color: var(--light);
-
-  max-width: 1000px;
-  margin: 20px auto;
-  padding-bottom: 20px;
-  text-align: center;
-
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-
   scrollbar-gutter: stable;
+  font-size: var(--font-size-body);
 }
 
 body {
-  box-sizing: border-box;
+  min-width: 320px;
+  margin: 0;
+  background: var(--darkest);
+  color: var(--light);
+  text-align: center;
+}
+
+#root {
+  width: min(100% - 24px, 1000px);
+  margin: 20px auto;
+  padding-bottom: 20px;
 }
 
 body.modal-open {
   overflow: hidden;
 }
 
-body,
 p,
 h1,
 h2,
@@ -45,44 +55,150 @@ select,
 p,
 h1,
 h2,
-h3 {
+h3,
+h4,
+h5,
+h6,
+option {
   font-family: "Saira Condensed", sans-serif;
   text-transform: uppercase;
 }
 
-option {
-  font-size: 1rem;
-}
-
-p,
-label,
+button,
 input,
 select,
-button {
-  font-size: 1.125rem;
+option {
+  font-size: var(--font-size-control);
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: var(--font-size-h1);
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-h2);
 }
 
 h3 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-h3);
+}
+
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h4);
 }
 
 button {
+  font-family: inherit;
+  text-transform: inherit;
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 32px;
   cursor: pointer;
   background-color: var(--dark);
   color: var(--light);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition:
+    transform 0.1s ease-out,
+    filter 0.1s ease-out;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--light);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.button-group > button {
+  flex: 1;
+  min-width: 0;
+}
+
+.text-input,
+.select-input {
+  min-width: 0;
+  border: 1px solid var(--light-muted);
+  outline: none;
+  border-radius: 32px;
+  padding: 4px 12px;
+  background-color: var(--darkest);
+  color: var(--light);
+  font: inherit;
+  text-transform: uppercase;
+  transition:
+    background-color 0.1s ease-out,
+    border-color 0.1s ease-out;
+}
+
+.text-input:focus-visible,
+.select-input:focus-visible {
+  border-color: var(--light);
+}
+
+.modal-overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 24px;
+  background-color: var(--modal-backdrop);
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal-panel {
+  position: relative;
+  width: min(100%, 560px);
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: 8px;
+  padding: 24px;
+  background-color: var(--darker);
+}
+
+@media (max-width: 600px) {
+  #root {
+    width: calc(100% - 24px);
+    margin-top: 12px;
+  }
+
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .modal-panel {
+    padding: 24px 12px;
+  }
 }
