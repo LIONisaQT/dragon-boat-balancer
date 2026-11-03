@@ -19,6 +19,11 @@
     font-size: var(--font-size-h2);
     font-weight: bolder;
     text-align: center;
+    background-color: transparent;
+
+    &:focus-visible {
+      background-color: var(--darkest);
+    }
   }
 
   .crew-manager {

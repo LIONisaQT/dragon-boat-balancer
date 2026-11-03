@@ -3,40 +3,48 @@ import { useEffect, useState } from "react";
 type ThemeMode = "auto" | "dark" | "light";
 
 export default function useTheme() {
-  const [themeMode, setThemeMode] = useState<ThemeMode>(
-    () => (localStorage.getItem("theme-mode") as ThemeMode) ?? "auto",
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    try {
+      const savedTheme = localStorage.getItem("theme-mode");
+      return savedTheme === "light" || savedTheme === "dark"
+        ? savedTheme
+        : "auto";
+    } catch (error) {
+      console.error("Failed to read the saved theme preference:", error);
+      return "auto";
+    }
+  });
+  const [systemPrefersDark, setSystemPrefersDark] = useState(
+    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
   );
 
-  function getAutoDarkPreference() {
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const hour = new Date().getHours();
-    const isNight = hour < 6 || hour >= 18;
-    return prefersDark || isNight;
-  }
-
-  function isDarkModeActive() {
-    if (themeMode === "auto") return getAutoDarkPreference();
-    return themeMode === "dark";
-  }
+  const isDarkModeActive = () =>
+    themeMode === "auto" ? systemPrefersDark : themeMode === "dark";
 
   useEffect(() => {
-    let isDark = false;
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyTheme = () => {
+      const isDark =
+        themeMode === "auto" ? mediaQuery.matches : themeMode === "dark";
+      document.documentElement.classList.toggle("light-mode", !isDark);
+      document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    };
+    const handleSystemThemeChange = () => {
+      setSystemPrefersDark(mediaQuery.matches);
+      if (themeMode === "auto") applyTheme();
+    };
 
-    if (themeMode === "auto") {
-      isDark = getAutoDarkPreference();
-    } else {
-      isDark = themeMode === "dark";
+    applyTheme();
+    mediaQuery.addEventListener("change", handleSystemThemeChange);
+
+    try {
+      localStorage.setItem("theme-mode", themeMode);
+    } catch (error) {
+      console.error("Failed to save the theme preference:", error);
     }
 
-    if (isDark) {
-      document.documentElement.classList.remove("light-mode");
-    } else {
-      document.documentElement.classList.add("light-mode");
-    }
-
-    localStorage.setItem("theme-mode", themeMode);
+    return () =>
+      mediaQuery.removeEventListener("change", handleSystemThemeChange);
   }, [themeMode]);
 
   function toggleTheme() {

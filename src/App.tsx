@@ -14,6 +14,7 @@ import {
 import CrewManager from "./components/CrewManager/CrewManager";
 import TeamOverview from "./components/TeamOverview/TeamOverview";
 import { resolveCrew, storeCrew } from "./utils/crewData";
+import useTheme from "./hooks/useTheme";
 
 type PaddlerLoadStatus = "loading" | "loaded" | "error";
 
@@ -47,6 +48,8 @@ const isUuidV4 = (value: string): boolean =>
   );
 
 function App() {
+  useTheme();
+
   const [teamId, setTeamId] = useState(getInitialTeamId);
   const [crews, setCrews] = useState<StoredCrew[]>([]);
   const [paddlers, setPaddlers] = useState<Paddler[]>([]);
@@ -242,7 +245,7 @@ function App() {
 
   return (
     <>
-      <h1>Dragon Boat</h1>
+      <h1>DB Crew Manager</h1>
       {currentCrewId ? (
         renderCrewView()
       ) : (
