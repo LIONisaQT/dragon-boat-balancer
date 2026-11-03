@@ -1,25 +1,24 @@
-import { Dispatch, SetStateAction } from "react";
 import { Paddler } from "../../types";
 import "./AddPaddlerToCrew.scss";
 import PaddlerTable from "../PaddlerTable/PaddlerTable";
 
 interface AddPaddlerToCrewProps {
-  openState: [boolean, Dispatch<SetStateAction<boolean>>];
+  isOpen: boolean;
+  onClose: () => void;
   paddlers: Paddler[]; // List of all paddlers on team
   selected: Paddler[];
   onSelectionChange: (paddlers: Paddler[]) => void;
-  addToRosterClicked: (paddlers: Paddler[]) => void;
+  onAddToRoster: (paddlers: Paddler[]) => void;
 }
 
 function AddPaddlerToCrew({
-  openState,
+  isOpen,
+  onClose,
   paddlers,
   selected,
   onSelectionChange,
-  addToRosterClicked,
+  onAddToRoster,
 }: AddPaddlerToCrewProps) {
-  const [isOpen, setOpen] = openState;
-
   return (
     <div className={`add-to-crew-container ${isOpen ? "" : "hidden"}`}>
       <div className="add-to-crew-bg"></div>
@@ -28,13 +27,13 @@ function AddPaddlerToCrew({
           paddlers={paddlers}
           selected={selected}
           onSelectionChange={onSelectionChange}
-          onPrimaryClicked={() => {
-            addToRosterClicked(selected);
-            setOpen(false);
+          onPrimaryAction={() => {
+            onAddToRoster(selected);
+            onClose();
           }}
-          primaryButtonText="Update crew"
-          onSecondaryClicked={() => setOpen(false)}
-          secondaryButtonText="Close"
+          primaryActionLabel="Update crew"
+          onSecondaryAction={onClose}
+          secondaryActionLabel="Close"
         />
       </div>
     </div>

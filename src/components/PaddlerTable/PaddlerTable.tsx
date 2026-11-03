@@ -7,10 +7,10 @@ interface TableProps {
   selected: Paddler[];
   onSelectionChange: (paddlers: Paddler[]) => void;
   onPaddlerClicked?: ((paddler: Paddler) => void) | null;
-  onPrimaryClicked?: (() => void) | null;
-  primaryButtonText?: string;
-  onSecondaryClicked?: (() => void) | null;
-  secondaryButtonText?: string;
+  onPrimaryAction?: (() => void) | null;
+  primaryActionLabel?: string;
+  onSecondaryAction?: (() => void) | null;
+  secondaryActionLabel?: string;
 }
 
 function PaddlerTable({
@@ -18,20 +18,19 @@ function PaddlerTable({
   selected,
   onSelectionChange,
   onPaddlerClicked = null,
-  onPrimaryClicked = null,
-  primaryButtonText = "Primary",
-  onSecondaryClicked = null,
-  secondaryButtonText = "Secondary",
+  onPrimaryAction = null,
+  primaryActionLabel = "Primary",
+  onSecondaryAction = null,
+  secondaryActionLabel = "Secondary",
 }: TableProps) {
+  const selectedIds = new Set(selected.map((paddler) => paddler.id));
   const allSelected =
     paddlers.length > 0 &&
-    paddlers.every((p) =>
-      selected.some((selectedPaddler) => selectedPaddler.id === p.id),
-    );
+    paddlers.every((paddler) => selectedIds.has(paddler.id));
 
   const onPaddlerChecked = (paddler: Paddler) => {
     onSelectionChange(
-      selected.some((selectedPaddler) => selectedPaddler.id === paddler.id)
+      selectedIds.has(paddler.id)
         ? selected.filter(
             (selectedPaddler) => selectedPaddler.id !== paddler.id,
           )
@@ -64,7 +63,7 @@ function PaddlerTable({
                 <input
                   className="table-checkbox"
                   type="checkbox"
-                  checked={selected.some((paddler) => paddler.id === p.id)}
+                  checked={selectedIds.has(p.id)}
                   onClick={(event) => event.stopPropagation()}
                   onChange={() => onPaddlerChecked(p)}
                 />
@@ -76,13 +75,13 @@ function PaddlerTable({
           ))}
         </tbody>
       </table>
-      {(onPrimaryClicked !== null || onSecondaryClicked !== null) && (
+      {(onPrimaryAction !== null || onSecondaryAction !== null) && (
         <div className="button-group">
-          {onPrimaryClicked && (
-            <button onClick={onPrimaryClicked}>{primaryButtonText}</button>
+          {onPrimaryAction && (
+            <button onClick={onPrimaryAction}>{primaryActionLabel}</button>
           )}
-          {onSecondaryClicked && (
-            <button onClick={onSecondaryClicked}>{secondaryButtonText}</button>
+          {onSecondaryAction && (
+            <button onClick={onSecondaryAction}>{secondaryActionLabel}</button>
           )}
         </div>
       )}

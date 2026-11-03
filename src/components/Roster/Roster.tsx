@@ -1,44 +1,37 @@
 import "./Roster.scss";
-import { Dispatch, SetStateAction } from "react";
 import { Paddler } from "../../types";
 import { sortRosterByWeight, sortRosterBySide } from "../../utils/utils";
 import PaddlerCard from "../PaddlerCard/PaddlerCard";
 
 interface RosterProps {
-  rosterState: [Paddler[], Dispatch<SetStateAction<Paddler[]>>];
+  roster: Paddler[];
+  onRosterChange: (roster: Paddler[]) => void;
   addNew: () => void;
-  clickPaddler: (paddler: Paddler) => void;
-  editPaddler: () => void;
 }
 
 export default function Roster({
-  rosterState,
+  roster,
+  onRosterChange,
   addNew,
-  clickPaddler,
-  editPaddler,
 }: RosterProps) {
-  const [roster, setRoster] = rosterState;
-
   return (
     <section className="roster-container">
       <h2>Reserve</h2>
       <section className="button-group">
-        <button onClick={() => setRoster(sortRosterByWeight(roster))}>
+        <button onClick={() => onRosterChange(sortRosterByWeight(roster))}>
           Sort by weight
         </button>
-        <button onClick={() => setRoster(sortRosterBySide(roster))}>
+        <button onClick={() => onRosterChange(sortRosterBySide(roster))}>
           Sort by side
         </button>
       </section>
       <div className="roster">
         {roster.map((paddler, i) => (
           <PaddlerCard
-            key={`${paddler.name}-${i}`}
+            key={paddler.id}
             details={paddler}
             position={i}
             location="roster"
-            onClick={clickPaddler}
-            onEdit={editPaddler}
           />
         ))}
       </div>

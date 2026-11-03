@@ -364,8 +364,6 @@ export default function CrewManager({
     setAddModalOpen(true);
   };
 
-  const onEditClicked = () => setAddModalOpen(true);
-
   const addToRoster = (paddlers: Paddler[]) => {
     const selectedIds = new Set(paddlers.map((p) => p.id));
     const seatedIds = new Set(
@@ -429,8 +427,10 @@ export default function CrewManager({
         <div className="crew-manager">
           <section className="main">
             <Toggles
-              centerMassState={[centerMass, setCenterMass]}
-              numRowsState={[numRows, setNumRows]}
+              centerMass={centerMass}
+              onCenterMassChange={setCenterMass}
+              numRows={numRows}
+              onNumRowsChange={setNumRows}
             />
             <section className="button-group">
               <button onClick={onGenerateLineupClicked}>Generate lineup</button>
@@ -444,23 +444,21 @@ export default function CrewManager({
               drum={drum}
               steer={steer}
               rowSize={numRows}
-              clickPaddler={() => {}}
-              editPaddler={onEditClicked}
             />
           </section>
           <Roster
-            rosterState={[roster, setRoster]}
+            roster={roster}
+            onRosterChange={setRoster}
             addNew={onAddNewClicked}
-            clickPaddler={() => {}}
-            editPaddler={onEditClicked}
           />
         </div>
         <AddPaddlerToCrew
-          openState={[addModalOpen, setAddModalOpen]}
+          isOpen={addModalOpen}
+          onClose={() => setAddModalOpen(false)}
           paddlers={paddlers}
           selected={selectedCrewPaddlers}
           onSelectionChange={setSelectedCrewPaddlers}
-          addToRosterClicked={addToRoster}
+          onAddToRoster={addToRoster}
         />
       </DndContext>
     </div>

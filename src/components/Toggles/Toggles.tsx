@@ -1,21 +1,24 @@
 import "./Toggles.scss";
-import { Dispatch, SetStateAction } from "react";
 import FrontBackBalance from "./FrontBackBalance";
 import NumRows from "./NumRows";
 
 interface TogglesProps {
-  centerMassState: [number, Dispatch<SetStateAction<number>>];
-  numRowsState: [number, Dispatch<SetStateAction<number>>];
+  centerMass: number;
+  onCenterMassChange: (centerMass: number) => void;
+  numRows: number;
+  onNumRowsChange: (numRows: number) => void;
 }
 
 export default function Toggles({
-  centerMassState,
-  numRowsState,
+  centerMass,
+  onCenterMassChange,
+  numRows,
+  onNumRowsChange,
 }: TogglesProps) {
   return (
     <section className="toggles">
-      <FrontBackBalance centerMassState={centerMassState} />
-      <NumRows numRowsState={numRowsState} />
+      <FrontBackBalance centerMass={centerMass} onChange={onCenterMassChange} />
+      <NumRows numRows={numRows} onChange={onNumRowsChange} />
     </section>
   );
 }

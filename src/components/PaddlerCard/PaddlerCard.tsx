@@ -1,33 +1,21 @@
 import "./PaddlerCard.scss";
 import { Paddler, PaddlerLocation } from "../../types";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { useEffect, useRef, useState } from "react";
-import { useOnClickOutside } from "../../hooks/useOnClickOutside";
 
 interface PaddlerProps {
   details: Paddler | null;
   location: PaddlerLocation;
   position: number | "drum" | "steer";
-  onClick: (paddler: Paddler) => void;
-  onEdit: () => void;
 }
 
 export default function PaddlerCard({
   details,
   position,
   location,
-  onClick,
-  onEdit,
 }: PaddlerProps) {
-  const [isPopupOpen, setPopupOpen] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
-  useOnClickOutside(
-    cardRef,
-    () => setPopupOpen((prev) => !prev),
-    () => setPopupOpen(false),
-    [popupRef],
-  );
+  const id = details
+    ? `paddler-${details.id}`
+    : `empty-${location}-${position}`;
 
   const {
     attributes,
@@ -37,11 +25,7 @@ export default function PaddlerCard({
     isDragging,
     over,
   } = useDraggable({
-    id: `${
-      details
-        ? `paddler-${details.name}-${location}-${position}`
-        : `empty-${location}-${position}`
-    }`,
+    id,
     data: { details, position, location },
     disabled: !details,
   });
@@ -53,11 +37,7 @@ export default function PaddlerCard({
     : undefined;
 
   const { isOver, setNodeRef: setDroppableNodeRef } = useDroppable({
-    id: `${
-      details
-        ? `paddler-${details.name}-${location}-${position}`
-        : `empty-${location}-${position}`
-    }`,
+    id,
     data: { details, position, location },
   });
 
@@ -65,10 +45,6 @@ export default function PaddlerCard({
     setDraggableNodeRef(node);
     setDroppableNodeRef(node);
   };
-
-  useEffect(() => {
-    if (isDragging) setPopupOpen(false);
-  }, [isDragging]);
 
   return (
     <div
@@ -81,11 +57,7 @@ export default function PaddlerCard({
       {...attributes}
     >
       {details ? (
-        <div
-          className="info-card"
-          ref={cardRef}
-          onClick={() => onClick(details)}
-        >
+        <div className="info-card">
           <p className="name-container">
             {typeof position === "number" &&
             (location === "left" || location === "right") ? (
@@ -111,14 +83,6 @@ export default function PaddlerCard({
           </p>
         </div>
       )}
-      <div
-        ref={popupRef}
-        className={`popup-container ${isPopupOpen ? "" : "hidden"}`}
-      >
-        <button onClick={() => details && onEdit()} title="Edit">
-          ✍️
-        </button>
-      </div>
     </div>
   );
 }

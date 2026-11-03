@@ -1,12 +1,12 @@
-import { Dispatch, SetStateAction } from "react";
-
 interface FBBalanceProps {
-  centerMassState: [number, Dispatch<SetStateAction<number>>];
+  centerMass: number;
+  onChange: (centerMass: number) => void;
 }
 
-export default function FrontBackBalance({ centerMassState }: FBBalanceProps) {
-  const [centerMass, setCenterMass] = centerMassState;
-
+export default function FrontBackBalance({
+  centerMass,
+  onChange,
+}: FBBalanceProps) {
   return (
     <section className="front-back-balance">
       <h3>Front/back balance</h3>
@@ -17,7 +17,7 @@ export default function FrontBackBalance({ centerMassState }: FBBalanceProps) {
         max={10}
         step={0.5}
         value={centerMass}
-        onChange={(e) => setCenterMass(Number(e.target.value))}
+        onChange={(e) => onChange(Number(e.target.value))}
       />
     </section>
   );

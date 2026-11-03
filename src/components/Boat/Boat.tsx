@@ -9,8 +9,6 @@ interface BoatProps {
   drum: Paddler | null;
   steer: Paddler | null;
   rowSize: number;
-  clickPaddler: (paddler: Paddler) => void;
-  editPaddler: () => void;
 }
 
 export default function Boat({
@@ -19,8 +17,6 @@ export default function Boat({
   drum,
   steer,
   rowSize,
-  clickPaddler,
-  editPaddler,
 }: BoatProps) {
   return (
     <section className="boat-container">
@@ -29,24 +25,16 @@ export default function Boat({
         <div className="left paddlers">
           {leftSide.map((paddler, i) => (
             <PaddlerCard
-              key={`${paddler?.name}-${i}`}
+              key={`left-slot-${i}`}
               details={paddler}
               position={i}
               location="left"
-              onClick={clickPaddler}
-              onEdit={editPaddler}
             />
           ))}
         </div>
         <div className="center">
           <div className="drum">
-            <PaddlerCard
-              details={drum}
-              position={"drum"}
-              location="drum"
-              onClick={clickPaddler}
-              onEdit={editPaddler}
-            />
+            <PaddlerCard details={drum} position={"drum"} location="drum" />
           </div>
           <div className="boat-stats">
             <section>
@@ -65,24 +53,16 @@ export default function Boat({
             </section>
           </div>
           <div className="steer">
-            <PaddlerCard
-              details={steer}
-              position={"steer"}
-              location="steer"
-              onClick={clickPaddler}
-              onEdit={editPaddler}
-            />
+            <PaddlerCard details={steer} position={"steer"} location="steer" />
           </div>
         </div>
         <div className="right paddlers">
           {rightSide.map((paddler, i) => (
             <PaddlerCard
-              key={`${paddler?.name}-${i}`}
+              key={`right-slot-${i}`}
               details={paddler}
               position={i}
               location="right"
-              onClick={clickPaddler}
-              onEdit={editPaddler}
             />
           ))}
         </div>

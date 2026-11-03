@@ -513,12 +513,12 @@ function App() {
               selected={selected}
               onSelectionChange={setSelected}
               onPaddlerClicked={onPaddlerClicked}
-              onPrimaryClicked={() => setModalOpen(true)}
-              primaryButtonText="Create new paddler"
-              onSecondaryClicked={
+              onPrimaryAction={() => setModalOpen(true)}
+              primaryActionLabel="Create new paddler"
+              onSecondaryAction={
                 selected.length > 0 ? () => deletePaddlers(selected) : null
               }
-              secondaryButtonText="Delete selected"
+              secondaryActionLabel="Delete selected"
             />
             <AddNewPaddler
               openState={[addModalOpen, setModalOpen]}
