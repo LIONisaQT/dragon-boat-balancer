@@ -6,16 +6,26 @@ import {
   useSensor,
   PointerSensor,
 } from "@dnd-kit/core";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
-  useState,
-  useEffect,
-  Dispatch,
-  SetStateAction,
-  useMemo,
-  useRef,
-} from "react";
-import { Paddler, SideArray, PaddlerLocation, Crew } from "../../types";
+  Paddler,
+  SideArray,
+  PaddlerLocation,
+  PaddlerPosition,
+  Crew,
+} from "../../types";
 import { generateLineup } from "../../utils/utils";
+import {
+  getCrewPaddlers,
+  getPaddlerDragData,
+  getPaddlerDropData,
+  getRecalledRoster,
+  insertPaddlerInRoster,
+  placePaddlerInSide,
+  removePaddlerFromSide,
+  resizeSide,
+} from "./crewLayout";
+import { hasCrewChanged } from "./crewPersistence";
 import Boat from "../Boat/Boat";
 import Roster from "../Roster/Roster";
 import Toggles from "../Toggles/Toggles";
@@ -36,7 +46,7 @@ export default function CrewManager({
   onClose,
   onEdit,
 }: CrewManagerProps) {
-  const isMounted = useRef(false);
+  const hasMounted = useRef(false);
 
   const [numRows, setNumRows] = useState(crew.numRows);
   const [centerMass, setCenterMass] = useState(crew.centerMass);
@@ -48,20 +58,11 @@ export default function CrewManager({
   const [steer, setSteer] = useState<Paddler | null>(crew.steer);
 
   const crewPaddlers = useMemo(() => {
-    const members = [
-      ...roster,
-      ...leftSide.filter((p): p is Paddler => p !== null),
-      ...rightSide.filter((p): p is Paddler => p !== null),
-      ...(drum ? [drum] : []),
-      ...(steer ? [steer] : []),
-    ];
-    const uniqueMembers = new Map<string, Paddler>();
-    members.forEach((p) => uniqueMembers.set(p.id, p));
-    return [...uniqueMembers.values()];
+    return getCrewPaddlers(roster, leftSide, rightSide, drum, steer);
   }, [roster, leftSide, rightSide, drum, steer]);
 
-  const [name, setName] = useState(crew.name);
-  const [updatedName, setUpdatedName] = useState(crew.name);
+  const [nameDraft, setNameDraft] = useState(crew.name);
+  const [committedName, setCommittedName] = useState(crew.name);
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedCrewPaddlers, setSelectedCrewPaddlers] = useState<Paddler[]>(
@@ -76,24 +77,20 @@ export default function CrewManager({
     setRightSide(crew.rightSide);
     setDrum(crew.drum);
     setSteer(crew.steer);
-    setName(crew.name);
-    setUpdatedName(crew.name);
+    setNameDraft(crew.name);
+    setCommittedName(crew.name);
   }, [crew]);
 
   useEffect(() => {
-    if (addModalOpen) setSelectedCrewPaddlers(crewPaddlers);
-  }, [addModalOpen, crewPaddlers]);
-
-  useEffect(() => {
     // Prevent saving on mount
-    if (!isMounted.current) {
-      isMounted.current = true;
+    if (!hasMounted.current) {
+      hasMounted.current = true;
       return;
     }
 
     const updatedCrew = {
       ...crew,
-      name: updatedName,
+      name: committedName,
       numRows,
       centerMass,
       leftSide,
@@ -103,9 +100,7 @@ export default function CrewManager({
       roster,
     };
 
-    // Prevent saving when nothing has changed
-    if (JSON.stringify(updatedCrew) !== JSON.stringify(crew)) {
-      // Debounce edit calls
+    if (hasCrewChanged(crew, updatedCrew)) {
       const handler = setTimeout(() => {
         onEdit?.(updatedCrew);
       }, DEBOUNCE_TIMER);
@@ -115,7 +110,7 @@ export default function CrewManager({
   }, [
     crew,
     onEdit,
-    updatedName,
+    committedName,
     numRows,
     centerMass,
     leftSide,
@@ -126,197 +121,138 @@ export default function CrewManager({
   ]);
 
   useEffect(() => {
-    const resizeSide = (setSide: Dispatch<SetStateAction<SideArray>>) => {
-      setSide((prev) => {
-        const copy = [...prev];
+    const leftResize = resizeSide(leftSide, numRows);
+    const rightResize = resizeSide(rightSide, numRows);
 
-        if (numRows > copy.length) {
-          copy.push(...Array(numRows - copy.length).fill(null));
-        } else if (numRows < copy.length) {
-          const removed = copy.slice(numRows).filter(Boolean) as Paddler[];
-          if (removed.length > 0) {
-            setRoster((prevRoster) => [...prevRoster, ...removed]);
-          }
-          copy.length = numRows;
-        }
+    if (leftResize.side !== leftSide) setLeftSide(leftResize.side);
+    if (rightResize.side !== rightSide) setRightSide(rightResize.side);
 
-        return copy;
-      });
-    };
+    const removed = [...leftResize.removed, ...rightResize.removed];
+    if (removed.length > 0) {
+      setRoster((previousRoster) => [...previousRoster, ...removed]);
+    }
+  }, [numRows, leftSide, rightSide, setRoster]);
 
-    resizeSide(setLeftSide);
-    resizeSide(setRightSide);
-  }, [numRows, setRoster, setLeftSide, setRightSide]);
-
-  const removeMap = useMemo<
-    Record<PaddlerLocation, (p: Paddler, pos: number) => void>
-  >(
-    () => ({
-      left: (p, pos) => {
-        setLeftSide((prev) => {
-          const copy = [...prev];
-          if (pos !== undefined && copy[pos]?.id === p.id) {
-            copy[pos] = null;
-          } else {
-            const index = copy.findIndex((x) => x?.id === p.id);
-            if (index !== -1) copy[index] = null;
-          }
-          return copy;
-        });
-      },
-      right: (p, pos) => {
-        setRightSide((prev) => {
-          const copy = [...prev];
-          if (pos !== undefined && copy[pos]?.id === p.id) {
-            copy[pos] = null;
-          } else {
-            const index = copy.findIndex((x) => x?.id === p.id);
-            if (index !== -1) copy[index] = null;
-          }
-          return copy;
-        });
-      },
-      drum: (p) => setDrum((prev) => (prev?.id === p.id ? null : prev)),
-      steer: (p) => setSteer((prev) => (prev?.id === p.id ? null : prev)),
-      roster: (p) => setRoster((prev) => prev.filter((x) => x.id !== p.id)),
-    }),
-    [setLeftSide, setRightSide, setDrum, setSteer, setRoster],
-  );
-
-  const addMap = useMemo<
-    Record<PaddlerLocation, (p: Paddler, targetPos: number) => void>
-  >(
-    () => ({
-      left: (p: Paddler, targetPos: number) => {
-        setLeftSide((prev) => {
-          const copy = [...prev];
-          const existingIndex = copy.findIndex((x) => x?.id === p.id);
-          if (existingIndex !== -1) {
-            copy[existingIndex ?? targetPos] = p;
-          } else {
-            copy[targetPos] = p;
-          }
-          return copy;
-        });
-      },
-      right: (p: Paddler, targetPos: number) => {
-        setRightSide((prev) => {
-          const copy = [...prev];
-          const existingIndex = copy.findIndex((x) => x?.id === p.id);
-          if (existingIndex !== -1) {
-            copy[existingIndex] = p;
-          } else {
-            copy[targetPos] = p;
-          }
-          return copy;
-        });
-      },
-      drum: (p: Paddler) => {
-        setDrum((prev) => (prev?.id === p.id ? p : p));
-      },
-      steer: (p: Paddler) => {
-        setSteer((prev) => (prev?.id === p.id ? p : p));
-      },
-      roster: (p: Paddler, index: number) => {
-        setRoster((prev) => {
-          const existingIndex = prev.findIndex((x) => x.id === p.id);
-          if (existingIndex !== -1) {
-            const newRoster = [...prev];
-            newRoster[existingIndex] = p;
-            return newRoster;
-          } else {
-            const newRoster = [...prev];
-            newRoster.splice(index, 0, p);
-            return newRoster;
-          }
-        });
-      },
-    }),
-    [setLeftSide, setRightSide, setDrum, setSteer, setRoster],
-  );
-
-  const getTarget = (loc: PaddlerLocation) => {
-    switch (loc) {
+  const removePaddler = (
+    location: PaddlerLocation,
+    paddler: Paddler,
+    position: PaddlerPosition,
+  ) => {
+    switch (location) {
       case "left":
-        return leftSide;
+        if (typeof position === "number") {
+          setLeftSide((side) => removePaddlerFromSide(side, paddler, position));
+        }
+        break;
       case "right":
-        return rightSide;
-      case "roster":
-        return roster;
+        if (typeof position === "number") {
+          setRightSide((side) =>
+            removePaddlerFromSide(side, paddler, position),
+          );
+        }
+        break;
       case "drum":
-        return drum ? [drum] : [null];
+        setDrum((current) => (current?.id === paddler.id ? null : current));
+        break;
       case "steer":
-        return steer ? [steer] : [null];
+        setSteer((current) => (current?.id === paddler.id ? null : current));
+        break;
+      case "roster":
+        setRoster((current) =>
+          current.filter((member) => member.id !== paddler.id),
+        );
+        break;
     }
   };
 
-  // Util method for single slot positions
-  const getSingleSlot = (loc: PaddlerLocation) =>
-    loc === "drum" ? drum : steer;
+  const addPaddler = (
+    location: PaddlerLocation,
+    paddler: Paddler,
+    position: PaddlerPosition,
+  ) => {
+    switch (location) {
+      case "left":
+        if (typeof position === "number") {
+          setLeftSide((side) => placePaddlerInSide(side, paddler, position));
+        }
+        break;
+      case "right":
+        if (typeof position === "number") {
+          setRightSide((side) => placePaddlerInSide(side, paddler, position));
+        }
+        break;
+      case "drum":
+        setDrum(paddler);
+        break;
+      case "steer":
+        setSteer(paddler);
+        break;
+      case "roster":
+        if (typeof position === "number") {
+          setRoster((current) =>
+            insertPaddlerInRoster(current, paddler, position),
+          );
+        }
+        break;
+    }
+  };
 
-  // Util method for single slot positions
-  const setSingleSlot = (loc: PaddlerLocation, value: Paddler | null) => {
-    if (loc === "drum") setDrum(value);
-    else if (loc === "steer") setSteer(value);
+  const getPaddlerAt = (
+    location: PaddlerLocation,
+    position: PaddlerPosition,
+  ): Paddler | null => {
+    switch (location) {
+      case "left":
+        return typeof position === "number"
+          ? (leftSide[position] ?? null)
+          : null;
+      case "right":
+        return typeof position === "number"
+          ? (rightSide[position] ?? null)
+          : null;
+      case "roster":
+        return typeof position === "number" ? (roster[position] ?? null) : null;
+      case "drum":
+        return drum;
+      case "steer":
+        return steer;
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
-    const dragged = active.data.current?.details as Paddler;
-    const currentLocation = active.data.current?.location as PaddlerLocation;
-    const currentPosition = active.data.current?.position ?? 0;
-
-    const destination = over?.data.current;
-    const newLocation = destination?.location as PaddlerLocation | undefined;
-    const newPosition = destination?.position;
+    const source = getPaddlerDragData(active.data.current);
+    if (!source) return;
 
     // Dropped outside → return to roster
-    if (!destination) {
-      if (currentLocation === "roster") return;
-      removeMap[currentLocation]?.(dragged, currentPosition);
-      addMap["roster"]?.(dragged, roster.length);
+    if (!over) {
+      if (source.location === "roster") return;
+      removePaddler(source.location, source.details, source.position);
+      addPaddler("roster", source.details, roster.length);
       return;
     }
+
+    const destination = getPaddlerDropData(over.data.current);
+    if (!destination) return;
+    const { location: newLocation, position: newPosition } = destination;
 
     // Same location + same position → nothing to do
-    if (currentLocation === newLocation && currentPosition === newPosition)
+    if (source.location === newLocation && source.position === newPosition) {
       return;
-
-    const isSourceArray = !["drum", "steer"].includes(currentLocation);
-    const isDestArray = !["drum", "steer"].includes(newLocation!);
+    }
 
     // Read destination before removing anything
-    const existingDest = isDestArray
-      ? ((getTarget(newLocation!) as Paddler[])[
-          newPosition ?? (getTarget(newLocation!) as Paddler[]).length
-        ] ?? null)
-      : getSingleSlot(newLocation!);
-    const destIndex = isDestArray
-      ? (newPosition ?? (getTarget(newLocation!) as Paddler[]).length)
-      : 0;
+    const existingDestination = getPaddlerAt(newLocation, newPosition);
 
     // Remove dragged from source
-    if (isSourceArray) removeMap[currentLocation]?.(dragged, currentPosition);
-    else setSingleSlot(currentLocation, null);
+    removePaddler(source.location, source.details, source.position);
 
     // Place dragged into destination, swap if needed
-    if (isDestArray) {
-      if (existingDest) {
-        removeMap[newLocation!]?.(existingDest, destIndex);
-        if (isSourceArray)
-          addMap[currentLocation]?.(existingDest, currentPosition);
-        else setSingleSlot(currentLocation, existingDest);
-      }
-      addMap[newLocation!]?.(dragged, destIndex);
-    } else {
-      if (existingDest) {
-        if (isSourceArray)
-          addMap[currentLocation]?.(existingDest, currentPosition);
-        else setSingleSlot(currentLocation, existingDest);
-      }
-      setSingleSlot(newLocation!, dragged);
+    if (existingDestination) {
+      removePaddler(newLocation, existingDestination, newPosition);
+      addPaddler(source.location, existingDestination, source.position);
     }
+    addPaddler(newLocation, source.details, newPosition);
   };
 
   const pointerSensor = useSensor(PointerSensor, {
@@ -340,13 +276,9 @@ export default function CrewManager({
   };
 
   const onRecallClicked = () => {
-    setRoster((prev) => [
-      ...prev,
-      ...leftSide.filter((p): p is Paddler => p !== null),
-      ...rightSide.filter((p): p is Paddler => p !== null),
-      ...(drum ? [drum] : []),
-      ...(steer ? [steer] : []),
-    ]);
+    setRoster((previousRoster) =>
+      getRecalledRoster(previousRoster, leftSide, rightSide, drum, steer),
+    );
 
     setLeftSide(Array(numRows).fill(null));
     setRightSide(Array(numRows).fill(null));
@@ -361,6 +293,7 @@ export default function CrewManager({
     steer !== null;
 
   const onAddNewClicked = () => {
+    setSelectedCrewPaddlers(crewPaddlers);
     setAddModalOpen(true);
   };
 
@@ -409,9 +342,9 @@ export default function CrewManager({
       <section className="crew-info-header">
         <input
           className="crew-name"
-          defaultValue={crew.name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={() => setUpdatedName(name)}
+          value={nameDraft}
+          onChange={(e) => setNameDraft(e.target.value)}
+          onBlur={() => setCommittedName(nameDraft)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.currentTarget.blur();
