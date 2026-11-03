@@ -1,10 +1,8 @@
-@import url(../../colors.css);
-
 .crew-manager-container {
   background-color: var(--darker);
   border-radius: 8px;
   padding: 16px 0;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 8px var(--shadow-color);
   position: relative;
 
   .crew-info-header {
@@ -18,21 +16,9 @@
   .crew-name {
     width: 80%;
     height: 2.125rem;
-    font-size: 2rem;
+    font-size: var(--font-size-h2);
     font-weight: bolder;
     text-align: center;
-    outline: none;
-    border: 2px solid transparent;
-    border-radius: 32px;
-    background-color: transparent;
-    color: var(--light);
-    transition: all 0.1s ease-out;
-
-    &:focus {
-      border: 2px solid var(--light-muted);
-      background-color: var(--darkest);
-      color: var(--light);
-    }
   }
 
   .crew-manager {
@@ -52,16 +38,6 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
-
-      .button-group {
-        display: flex;
-        gap: 4px;
-        width: 100%;
-
-        button {
-          flex: 1;
-        }
-      }
     }
   }
 
@@ -71,10 +47,11 @@
     right: 14px;
     width: 24px;
     height: 24px;
+    min-height: 24px;
+    padding: 0;
     border-radius: 50%;
     background: transparent;
-    color: var(--white);
-    font-size: 1.2rem;
+    color: var(--light);
 
     &:hover {
       color: var(--red);

@@ -60,18 +60,31 @@ export default function AddNewPaddler({
   };
 
   return (
-    <div className={`new-paddler-container ${isOpen ? "" : "hidden"}`}>
-      <div className="background" onClick={onClose} />
-      <div className="new-paddler-modal">
+    <div
+      className="modal-overlay"
+      hidden={!isOpen}
+      onClick={onClose}
+      aria-hidden={!isOpen}
+    >
+      <div
+        className="modal-panel new-paddler-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="paddler-modal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
         <button className="close-button" onClick={onClose}>
           ✕
         </button>
-        <h2>{paddler ? "Edit paddler" : "Add paddler"}</h2>
+        <h2 id="paddler-modal-title">
+          {paddler ? "Edit paddler" : "Add paddler"}
+        </h2>
         <section>
           <label htmlFor="name">Name</label>
           <input
             type="text"
             id="name"
+            className="text-input paddler-name-input"
             placeholder="Paddler name"
             value={formValues.name}
             onChange={(e) =>
@@ -86,6 +99,7 @@ export default function AddNewPaddler({
           <label htmlFor="side-pref">Side preference</label>
           <select
             id="side-pref"
+            className="select-input"
             value={formValues.side}
             onChange={(e) => {
               if (isPaddlerSide(e.target.value)) {
@@ -103,6 +117,7 @@ export default function AddNewPaddler({
           <input
             type="number"
             id="weight"
+            className="text-input paddler-weight-input"
             value={formValues.weight}
             min={1}
             max={999}

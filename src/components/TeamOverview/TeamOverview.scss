@@ -1,0 +1,140 @@
+.dragon-boat-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  .team-id-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    margin: 0 auto;
+
+    button {
+      color: var(--light-muted);
+    }
+
+    .team-id {
+      width: fit-content;
+      padding: 2px 16px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .team-id-input {
+      width: min(24rem, calc(100vw - 96px));
+      min-width: 0;
+    }
+
+    .team-id-action {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  .crews {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .crew-list {
+    overflow-x: auto;
+
+    table {
+      width: 100%;
+      table-layout: auto;
+      border-spacing: 0;
+
+      th,
+      td {
+        padding: 8px 0;
+        text-align: left;
+      }
+
+      th:first-child,
+      td:first-child {
+        width: 80%;
+      }
+
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 1%;
+        white-space: nowrap;
+      }
+
+      tbody {
+        tr {
+          transition: filter 0.1s ease-out;
+
+          &:hover {
+            filter: brightness(1.1);
+          }
+
+          &:nth-child(odd) {
+            background-color: var(--dark);
+          }
+
+          &:nth-child(even) {
+            background-color: var(--darker);
+          }
+        }
+
+        td:first-child {
+          padding-left: 16px;
+        }
+
+        td:nth-child(3) {
+          padding-right: 16px;
+        }
+      }
+    }
+
+    .options {
+      display: flex;
+      gap: 12px;
+      padding-right: 16px;
+
+      button {
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        min-height: 32px;
+        padding: 0;
+
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .delete {
+        background-color: var(--red);
+        color: var(--light);
+      }
+    }
+
+    .crew-name {
+      cursor: pointer;
+    }
+  }
+
+  .paddlers {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    h2 {
+      text-align: left;
+    }
+  }
+}

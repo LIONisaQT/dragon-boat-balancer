@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import "./App.scss";
 import { Crew, Paddler, StoredCrew } from "./types";
 import {
   copyTeamCrew,

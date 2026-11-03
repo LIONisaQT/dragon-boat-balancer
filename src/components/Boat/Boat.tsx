@@ -20,7 +20,6 @@ export default function Boat({
 }: BoatProps) {
   return (
     <section className="boat-container">
-      <h2>Boat</h2>
       <div className="boat">
         <div className="left paddlers">
           {leftSide.map((paddler, i) => (

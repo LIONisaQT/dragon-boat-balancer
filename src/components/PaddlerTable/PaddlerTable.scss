@@ -1,5 +1,3 @@
-@import url(../../colors.css);
-
 .paddler-table {
   width: 100%;
   display: flex;
@@ -10,28 +8,27 @@
   table {
     width: 100%;
     border-spacing: 0;
-    font-size: 1.125rem;
+    cursor: pointer;
 
     td {
       padding: 8px 0;
     }
 
     tbody {
-      cursor: pointer;
-      transition: filter 0.1s ease-out;
-
       tr {
+        transition: filter 0.1s ease-out;
+
         &:hover {
           filter: brightness(1.1);
         }
-      }
 
-      tr:nth-child(odd) {
-        background-color: var(--dark);
-      }
+        &:nth-child(odd) {
+          background-color: var(--dark);
+        }
 
-      tr:nth-child(even) {
-        background-color: var(--darker);
+        &:nth-child(even) {
+          background-color: var(--darker);
+        }
       }
     }
 
@@ -84,15 +81,5 @@
 
   thead {
     background: var(--darkest);
-  }
-
-  .button-group {
-    width: 100%;
-    display: flex;
-    gap: 12px;
-
-    button {
-      width: 100%;
-    }
   }
 }

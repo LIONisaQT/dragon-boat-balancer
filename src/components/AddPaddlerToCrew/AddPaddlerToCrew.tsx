@@ -20,9 +20,13 @@ function AddPaddlerToCrew({
   onAddToRoster,
 }: AddPaddlerToCrewProps) {
   return (
-    <div className={`add-to-crew-container ${isOpen ? "" : "hidden"}`}>
-      <div className="add-to-crew-bg"></div>
-      <div className="add-to-crew-modal">
+    <div className="modal-overlay" hidden={!isOpen}>
+      <div
+        className="modal-panel add-to-crew-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Update crew"
+      >
         <PaddlerTable
           paddlers={paddlers}
           selected={selected}

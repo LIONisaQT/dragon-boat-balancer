@@ -1,14 +1,10 @@
-@import url(../../colors.css);
-
 .paddler-card {
-  width: 92px;
-  height: 40px;
-  border-radius: 4px;
+  width: 108px;
+  height: 64px;
   padding: 16px;
-
+  border-radius: 4px;
   opacity: 1;
   touch-action: none;
-  position: relative;
 
   .info-card {
     display: flex;
@@ -57,68 +53,32 @@
     text-align: center;
   }
 
-  .popup-container {
-    position: absolute;
-    left: 50%;
-    top: -40px;
-    transform: translate(-50%, 0);
+  &--details {
+    cursor: grab;
+    background-color: var(--paddler-card-background);
+    color: var(--paddler-card-foreground);
+    box-shadow: 0 2px 4px var(--shadow-color);
+  }
 
+  &--empty {
     display: flex;
-    flex-direction: row;
-    gap: 4px;
-    padding: 4px;
-    border-radius: 4px;
-
-    background-color: hsl(270, 10%, 89%);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
-    opacity: 1;
-    scale: 1;
-    transition:
-      scale 0.1s ease-out,
-      top 0.1s ease-out,
-      opacity 0.1s ease-out;
-
-    button {
-      width: 28px;
-      height: 28px;
-      background-color: hsl(270, 10%, 89%);
-      border-radius: 4px;
-    }
+    align-items: center;
+    justify-content: center;
+    background-color: var(--empty-slot-background);
+    color: var(--light);
   }
 
-  .hidden {
-    scale: 0.9;
-    opacity: 0;
-    top: 0;
+  &--dragging {
+    opacity: 0.8;
+    cursor: grabbing;
   }
-}
 
-.details {
-  background-color: hsl(270, 10%, 89%);
-  color: hsl(220, 6%, 10%);
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
+  &--dragged-over {
+    opacity: 0.5;
+    background-color: var(--green);
+  }
 
-.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.3);
-  color: var(--light);
-}
-
-.dragging {
-  opacity: 0.8;
-  cursor: grabbing;
-}
-
-.dragged-over {
-  opacity: 0.5;
-  background-color: var(--green);
-}
-
-.return {
-  background-color: var(--red);
+  &--return {
+    background-color: var(--red);
+  }
 }

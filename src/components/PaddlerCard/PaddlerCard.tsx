@@ -49,9 +49,13 @@ export default function PaddlerCard({
   return (
     <div
       ref={setNodeRef}
-      className={`paddler-card ${details ? "details" : "empty"} ${
-        isDragging ? `dragging ${over ? "" : "return"}` : ""
-      } ${isOver ? "dragged-over" : ""}`}
+      className={`paddler-card ${
+        details ? "paddler-card--details" : "paddler-card--empty"
+      } ${
+        isDragging
+          ? `paddler-card--dragging ${over ? "" : "paddler-card--return"}`
+          : ""
+      } ${isOver ? "paddler-card--dragged-over" : ""}`}
       style={style}
       {...listeners}
       {...attributes}
@@ -59,10 +63,6 @@ export default function PaddlerCard({
       {details ? (
         <div className="info-card">
           <p className="name-container">
-            {typeof position === "number" &&
-            (location === "left" || location === "right") ? (
-              <span>{position + 1}. </span>
-            ) : null}
             <span className="name">{details.name}</span>
           </p>
           <div className="info">

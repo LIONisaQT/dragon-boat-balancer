@@ -341,7 +341,7 @@ export default function CrewManager({
       )}
       <section className="crew-info-header">
         <input
-          className="crew-name"
+          className="crew-name text-input"
           value={nameDraft}
           onChange={(e) => setNameDraft(e.target.value)}
           onBlur={() => setCommittedName(nameDraft)}

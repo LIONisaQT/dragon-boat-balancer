@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Paddler, StoredCrew } from "../../types";
 import AddNewPaddler from "../Roster/AddNewPaddler";
 import PaddlerTable from "../PaddlerTable/PaddlerTable";
+import "./TeamOverview.scss";
 
 interface TeamOverviewProps {
   teamId: string;
