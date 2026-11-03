@@ -15,8 +15,18 @@ import CrewManager from "./components/CrewManager/CrewManager";
 import TeamOverview from "./components/TeamOverview/TeamOverview";
 import { resolveCrew, storeCrew } from "./utils/crewData";
 import useTheme from "./hooks/useTheme";
+import FirstTimeUserModal from "./components/FirstTimeUserModal/FirstTimeUserModal";
 
 type PaddlerLoadStatus = "loading" | "loaded" | "error";
+
+function getInitialFirstTimeModalOpen(): boolean {
+  try {
+    return localStorage.getItem("dbcm-ftu") !== "true";
+  } catch (error) {
+    console.error("Failed to read the first-time user preference:", error);
+    return true;
+  }
+}
 
 function getInitialTeamId(): string {
   try {
@@ -57,6 +67,9 @@ function App() {
     useState<PaddlerLoadStatus>("loading");
   const [paddlerLoadError, setPaddlerLoadError] = useState<string | null>(null);
   const [currentCrewId, setCurrentCrewId] = useState<string | null>(null);
+  const [isFirstTimeModalOpen, setIsFirstTimeModalOpen] = useState(
+    getInitialFirstTimeModalOpen,
+  );
 
   useEffect(() => {
     try {
@@ -195,6 +208,18 @@ function App() {
     [storedCurrentCrew, paddlerLoadStatus, paddlersById],
   );
 
+  const closeFirstTimeModal = () => {
+    try {
+      localStorage.setItem("dbcm-ftu", "true");
+    } catch (error) {
+      console.error("Failed to save the first-time user preference:", error);
+      alert(
+        "The first-time user preference could not be saved in this browser.",
+      );
+    }
+    setIsFirstTimeModalOpen(false);
+  };
+
   const renderCrewView = () => {
     if (paddlerLoadStatus === "loading") {
       return <p>Loading crew paddlers...</p>;
@@ -245,6 +270,9 @@ function App() {
 
   return (
     <>
+      {isFirstTimeModalOpen && (
+        <FirstTimeUserModal onClose={closeFirstTimeModal} />
+      )}
       <h1>DB Crew Manager</h1>
       {currentCrewId ? (
         renderCrewView()
