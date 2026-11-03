@@ -111,7 +111,7 @@ export async function deleteTeamCrew(
   await deleteDoc(crewRef);
 }
 
-export async function createTeamPaddler(
+export async function saveTeamPaddler(
   teamId: string,
   paddler: Paddler,
 ): Promise<void> {

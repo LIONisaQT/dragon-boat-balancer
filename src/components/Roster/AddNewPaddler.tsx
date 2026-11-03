@@ -1,7 +1,7 @@
 import { Paddler } from "../../types";
 import { sanitizeNumber, sanitizeText } from "../../utils/utils";
 import "./AddNewPaddler.scss";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 type PaddlerFormValues = Pick<
   Paddler,
@@ -22,17 +22,18 @@ const isPaddlerSide = (side: string): side is Paddler["side"] =>
   side === "left" || side === "right" || side === "both";
 
 interface AddNewPaddlerProps {
-  openState: [boolean, Dispatch<SetStateAction<boolean>>];
+  isOpen: boolean;
+  onClose: () => void;
   paddler: Paddler | null;
-  onSubmit: (paddler: Paddler, isNew: boolean) => void;
+  onSubmit: (paddler: Paddler) => void;
 }
 
 export default function AddNewPaddler({
-  openState,
+  isOpen,
+  onClose,
   paddler = null,
   onSubmit,
 }: AddNewPaddlerProps) {
-  const [isOpen, setOpen] = openState;
   const [formValues, setFormValues] = useState<PaddlerFormValues>(() =>
     createInitialFormValues(null),
   );
@@ -52,20 +53,17 @@ export default function AddNewPaddler({
   }, [isOpen, paddler]);
 
   const handleSubmit = () => {
-    onSubmit(
-      {
-        id: paddler?.id ?? crypto.randomUUID(),
-        ...formValues,
-      },
-      !paddler,
-    );
+    onSubmit({
+      id: paddler?.id ?? crypto.randomUUID(),
+      ...formValues,
+    });
   };
 
   return (
     <div className={`new-paddler-container ${isOpen ? "" : "hidden"}`}>
-      <div className="background" onClick={() => setOpen(false)} />
+      <div className="background" onClick={onClose} />
       <div className="new-paddler-modal">
-        <button className="close-button" onClick={() => setOpen(false)}>
+        <button className="close-button" onClick={onClose}>
           ✕
         </button>
         <h2>{paddler ? "Edit paddler" : "Add paddler"}</h2>
@@ -123,7 +121,7 @@ export default function AddNewPaddler({
           >
             {paddler ? "Save" : "Add"}
           </button>
-          <button onClick={() => setOpen(false)}>Cancel</button>
+          <button onClick={onClose}>Cancel</button>
         </div>
       </div>
     </div>

@@ -2,92 +2,74 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.scss";
 import { Crew, Paddler, StoredCrew } from "./types";
 import {
-  createTeamCrew,
-  createTeamPaddler,
   copyTeamCrew,
+  createTeamCrew,
   deleteTeamCrew,
   deleteTeamPaddlers,
+  saveTeamPaddler,
   subscribeToTeamCrews,
   subscribeToTeamPaddlers,
-  updateTeamCrew,
   teamExists,
+  updateTeamCrew,
 } from "./services/teamData";
 import CrewManager from "./components/CrewManager/CrewManager";
-import AddNewPaddler from "./components/Roster/AddNewPaddler";
-import PaddlerTable from "./components/PaddlerTable/PaddlerTable";
+import TeamOverview from "./components/TeamOverview/TeamOverview";
+import { resolveCrew, storeCrew } from "./utils/crewData";
 
-function resolveCrew(
-  crew: StoredCrew,
-  paddlersById: Map<string, Paddler>,
-): { crew: Crew; missingPaddlerIds: string[] } {
-  const missingPaddlerIds = new Set<string>();
-  const resolvePaddler = (paddlerId: string): Paddler => {
-    const paddler = paddlersById.get(paddlerId);
-    if (!paddler) missingPaddlerIds.add(paddlerId);
-    return (
-      paddler ?? {
-        id: paddlerId,
-        name: "",
-        side: "both",
-        power: 0,
-        weight: 0,
-        height: 0,
-      }
-    );
-  };
+type PaddlerLoadStatus = "loading" | "loaded" | "error";
 
-  return {
-    crew: {
-      ...crew,
-      roster: crew.roster.map(resolvePaddler),
-      leftSide: crew.leftSide.map((id) => (id ? resolvePaddler(id) : null)),
-      rightSide: crew.rightSide.map((id) => (id ? resolvePaddler(id) : null)),
-      drum: crew.drum ? resolvePaddler(crew.drum) : null,
-      steer: crew.steer ? resolvePaddler(crew.steer) : null,
-    },
-    missingPaddlerIds: [...missingPaddlerIds],
-  };
+function getInitialTeamId(): string {
+  try {
+    return localStorage.getItem("localTeamId") ?? crypto.randomUUID();
+  } catch (error) {
+    console.error("Failed to read the saved team ID:", error);
+    return crypto.randomUUID();
+  }
 }
 
-function storeCrew(crew: Crew): StoredCrew {
-  return {
-    ...crew,
-    roster: crew.roster.map((paddler) => paddler.id),
-    leftSide: crew.leftSide.map((paddler) => paddler?.id ?? null),
-    rightSide: crew.rightSide.map((paddler) => paddler?.id ?? null),
-    drum: crew.drum?.id ?? null,
-    steer: crew.steer?.id ?? null,
-  };
+async function runTeamOperation(
+  operation: () => Promise<void>,
+  context: string,
+  failureMessage: string,
+): Promise<boolean> {
+  try {
+    await operation();
+    return true;
+  } catch (error) {
+    console.error(context, error);
+    alert(failureMessage);
+    return false;
+  }
 }
+
+const isUuidV4 = (value: string): boolean =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
 
 function App() {
-  const [teamId, setTeamId] = useState("");
-  const [isEditingTeamId, setIsEditingTeamId] = useState(false);
-  const [teamIdDraft, setTeamIdDraft] = useState("");
+  const [teamId, setTeamId] = useState(getInitialTeamId);
   const [crews, setCrews] = useState<StoredCrew[]>([]);
   const [paddlers, setPaddlers] = useState<Paddler[]>([]);
-  const [paddlersLoaded, setPaddlersLoaded] = useState(false);
-  const [selected, setSelected] = useState<Paddler[]>([]);
-  const [renamingCrewId, setRenamingCrewId] = useState<string | null>(null);
-  const [renameDraft, setRenameDraft] = useState("");
-
-  const [currCrewId, setCurrCrewId] = useState<string | null>(null);
-
-  const [clickedPaddler, setClickedPaddler] = useState<Paddler | null>(null);
-  const [addModalOpen, setModalOpen] = useState(false);
+  const [paddlerLoadStatus, setPaddlerLoadStatus] =
+    useState<PaddlerLoadStatus>("loading");
+  const [paddlerLoadError, setPaddlerLoadError] = useState<string | null>(null);
+  const [currentCrewId, setCurrentCrewId] = useState<string | null>(null);
 
   useEffect(() => {
-    const localId = localStorage.getItem("localTeamId") ?? crypto.randomUUID();
-    setTeamId(localId);
-    localStorage.setItem("localTeamId", localId);
-  }, []);
+    try {
+      localStorage.setItem("localTeamId", teamId);
+    } catch (error) {
+      console.error("Failed to save the team ID locally:", error);
+      alert("The team ID could not be saved in this browser.");
+    }
+  }, [teamId]);
 
   useEffect(() => {
-    if (!teamId) return;
-
     setCrews([]);
     setPaddlers([]);
-    setPaddlersLoaded(false);
+    setPaddlerLoadStatus("loading");
+    setPaddlerLoadError(null);
 
     const unsubscribeCrews = subscribeToTeamCrews(teamId, setCrews, (error) =>
       console.error(`Failed to load crews for team ${teamId}:`, error),
@@ -96,11 +78,13 @@ function App() {
       teamId,
       (teamPaddlers) => {
         setPaddlers(teamPaddlers);
-        setPaddlersLoaded(true);
+        setPaddlerLoadStatus("loaded");
+        setPaddlerLoadError(null);
       },
       (error) => {
         console.error(`Failed to load paddlers for team ${teamId}:`, error);
-        setPaddlersLoaded(true);
+        setPaddlerLoadStatus("error");
+        setPaddlerLoadError(error.message);
       },
     );
 
@@ -110,423 +94,174 @@ function App() {
     };
   }, [teamId]);
 
-  const addCrew = async () => {
-    if (!teamId) return;
+  const addCrew = () =>
+    runTeamOperation(
+      () => createTeamCrew(teamId),
+      `Failed to create crew for team ${teamId}:`,
+      "Failed to create crew",
+    );
 
-    try {
-      await createTeamCrew(teamId);
-    } catch (error) {
-      console.error(`Failed to create crew for team ${teamId}:`, error);
-      alert("Failed to create crew");
+  const deleteCrew = (crewId: string) =>
+    runTeamOperation(
+      () => deleteTeamCrew(teamId, crewId),
+      `Failed to delete crew ${crewId} from team ${teamId}:`,
+      "Failed to delete crew",
+    );
+
+  const copyCrew = (crew: StoredCrew) =>
+    runTeamOperation(
+      () => copyTeamCrew(teamId, crew),
+      `Failed to copy crew ${crew.id} for team ${teamId}:`,
+      "Failed to copy crew",
+    );
+
+  const saveCrewName = async (
+    crew: StoredCrew,
+    name: string,
+  ): Promise<boolean> => {
+    const normalizedName = name.trim();
+    if (!normalizedName) {
+      alert("Crew name cannot be blank.");
+      return false;
     }
+
+    return runTeamOperation(
+      () => updateTeamCrew(teamId, { ...crew, name: normalizedName }),
+      `Failed to rename crew ${crew.id} for team ${teamId}:`,
+      "Failed to rename crew",
+    );
   };
 
-  const deleteCrew = async (crewId: string) => {
-    if (!teamId) return;
+  const savePaddler = (paddler: Paddler) =>
+    runTeamOperation(
+      () => saveTeamPaddler(teamId, paddler),
+      `Failed to save paddler ${paddler.id} for team ${teamId}:`,
+      "Failed to save paddler",
+    );
 
-    try {
-      await deleteTeamCrew(teamId, crewId);
-    } catch (error) {
-      console.error(
-        `Failed to delete crew ${crewId} from team ${teamId}:`,
-        error,
-      );
-      alert("Failed to delete crew");
-    }
-  };
-
-  const copyCrew = async (crew: StoredCrew) => {
-    if (!teamId) return;
-
-    try {
-      await copyTeamCrew(teamId, crew);
-    } catch (error) {
-      console.error(
-        `Failed to copy crew ${crew.id} for team ${teamId}:`,
-        error,
-      );
-      alert("Failed to copy crew");
-    }
-  };
-
-  const saveCrewName = async (crew: StoredCrew) => {
-    if (!teamId) return;
-
-    try {
-      await updateTeamCrew(teamId, { ...crew, name: renameDraft });
-      setRenamingCrewId((currentId) =>
-        currentId === crew.id ? null : currentId,
-      );
-    } catch (error) {
-      console.error(
-        `Failed to rename crew ${crew.id} for team ${teamId}:`,
-        error,
-      );
-      alert("Failed to rename crew");
-    }
-  };
-
-  const addPaddler = async (paddler: Paddler) => {
-    if (!teamId) return;
-
-    try {
-      await createTeamPaddler(teamId, paddler);
-      setModalOpen(false);
-    } catch (error) {
-      console.error(`Failed to create paddler for team ${teamId}:`, error);
-      alert("Failed to add paddler");
-    }
-  };
-
-  const deletePaddlers = async (paddlersToDelete: Paddler[]) => {
-    if (!teamId || paddlersToDelete.length === 0) return;
-
-    try {
-      await deleteTeamPaddlers(teamId, paddlersToDelete);
-      setSelected([]);
-    } catch (error) {
-      console.error(`Failed to delete paddlers from team ${teamId}:`, error);
-      alert("Failed to delete selected paddlers");
-    }
+  const deletePaddlers = (paddlersToDelete: Paddler[]) => {
+    if (paddlersToDelete.length === 0) return;
+    void runTeamOperation(
+      () => deleteTeamPaddlers(teamId, paddlersToDelete),
+      `Failed to delete paddlers from team ${teamId}:`,
+      "Failed to delete selected paddlers",
+    );
   };
 
   const onEditCrew = useCallback(
-    async (updatedCrew: Crew) => {
-      if (!teamId) return;
-
-      try {
-        await updateTeamCrew(teamId, storeCrew(updatedCrew));
-        console.log(`Crew ${updatedCrew.id} updated successfully`);
-      } catch (error) {
-        console.error("Error editing crew:", error);
-        throw error;
-      }
-    },
+    (updatedCrew: Crew) =>
+      runTeamOperation(
+        () => updateTeamCrew(teamId, storeCrew(updatedCrew)),
+        `Failed to save crew ${updatedCrew.id} for team ${teamId}:`,
+        "Failed to save crew changes",
+      ).then(() => undefined),
     [teamId],
   );
 
-  const onCloseClicked = () => setCurrCrewId(null);
-  const paddlersById = useMemo(
-    () => new Map(paddlers.map((paddler) => [paddler.id, paddler])),
-    [paddlers],
-  );
-  const storedCurrCrew = crews.find((crew) => crew.id === currCrewId);
-  const resolvedCurrCrew = useMemo(
-    () =>
-      storedCurrCrew && paddlersLoaded
-        ? resolveCrew(storedCurrCrew, paddlersById)
-        : undefined,
-    [storedCurrCrew, paddlersLoaded, paddlersById],
-  );
-
-  const onPaddlerClicked = (paddler: Paddler) => {
-    setClickedPaddler(paddler);
-    setModalOpen(true);
-  };
-
-  useEffect(() => {
-    if (addModalOpen) return;
-    setClickedPaddler(null);
-  }, [addModalOpen]);
-
-  const copyTeamIdToClipboard = async (crewId: string) => {
-    try {
-      await navigator.clipboard.writeText(crewId);
-    } catch (err) {
-      console.error("Failed to copy crew ID:", crewId, err);
-    }
-  };
-
-  const submitTeamId = async () => {
-    const incomingTeamId = teamIdDraft.trim();
-    const uuidPattern =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidPattern.test(incomingTeamId)) {
+  const changeTeam = async (incomingTeamId: string): Promise<boolean> => {
+    if (!isUuidV4(incomingTeamId)) {
       alert("The team ID pattern does not match a valid UUID.");
-      return;
+      return false;
     }
 
     try {
       if (!(await teamExists(incomingTeamId))) {
         alert(`The team with UUID ${incomingTeamId} could not be found.`);
-        return;
+        return false;
       }
 
-      localStorage.setItem("localTeamId", incomingTeamId);
-      setCurrCrewId(null);
-      setSelected([]);
-      setRenamingCrewId(null);
-      setClickedPaddler(null);
-      setModalOpen(false);
+      setCurrentCrewId(null);
       setTeamId(incomingTeamId);
-      setIsEditingTeamId(false);
+      return true;
     } catch (error) {
       console.error(`Failed to load team ${incomingTeamId}:`, error);
       alert("Failed to load the team");
+      return false;
     }
+  };
+
+  const paddlersById = useMemo(
+    () => new Map(paddlers.map((paddler) => [paddler.id, paddler])),
+    [paddlers],
+  );
+  const storedCurrentCrew = crews.find((crew) => crew.id === currentCrewId);
+  const resolvedCurrentCrew = useMemo(
+    () =>
+      storedCurrentCrew && paddlerLoadStatus === "loaded"
+        ? resolveCrew(storedCurrentCrew, paddlersById)
+        : undefined,
+    [storedCurrentCrew, paddlerLoadStatus, paddlersById],
+  );
+
+  const renderCrewView = () => {
+    if (paddlerLoadStatus === "loading") {
+      return <p>Loading crew paddlers...</p>;
+    }
+    if (paddlerLoadStatus === "error") {
+      return (
+        <section>
+          <p>Could not load paddlers for this team.</p>
+          {paddlerLoadError && <p>{paddlerLoadError}</p>}
+          <button onClick={() => setCurrentCrewId(null)}>Back to crews</button>
+        </section>
+      );
+    }
+    if (!storedCurrentCrew) {
+      return (
+        <section>
+          <p>This crew is no longer available.</p>
+          <button onClick={() => setCurrentCrewId(null)}>Back to crews</button>
+        </section>
+      );
+    }
+    if (
+      resolvedCurrentCrew &&
+      resolvedCurrentCrew.missingPaddlerIds.length > 0
+    ) {
+      return (
+        <section>
+          <p>
+            This crew refers to paddlers that are missing from the team:{" "}
+            {resolvedCurrentCrew.missingPaddlerIds.join(", ")}
+          </p>
+          <button onClick={() => setCurrentCrewId(null)}>Back to crews</button>
+        </section>
+      );
+    }
+    if (!resolvedCurrentCrew) return null;
+
+    return (
+      <CrewManager
+        key={storedCurrentCrew.id}
+        paddlers={paddlers}
+        crew={resolvedCurrentCrew.crew}
+        onClose={() => setCurrentCrewId(null)}
+        onEdit={onEditCrew}
+      />
+    );
   };
 
   return (
     <>
       <h1>Dragon Boat</h1>
-      {currCrewId ? (
-        !paddlersLoaded ? (
-          <p>Loading crew paddlers...</p>
-        ) : !storedCurrCrew ? (
-          <section>
-            <p>This crew is no longer available.</p>
-            <button onClick={onCloseClicked}>Back to crews</button>
-          </section>
-        ) : resolvedCurrCrew &&
-          resolvedCurrCrew.missingPaddlerIds.length > 0 ? (
-          <section>
-            <p>
-              This crew refers to paddlers that are missing from the team:{" "}
-              {resolvedCurrCrew.missingPaddlerIds.join(", ")}
-            </p>
-            <button onClick={onCloseClicked}>Back to crews</button>
-          </section>
-        ) : resolvedCurrCrew ? (
-          <CrewManager
-            key={storedCurrCrew.id}
-            paddlers={paddlers}
-            crew={resolvedCurrCrew.crew}
-            onClose={onCloseClicked}
-            onEdit={onEditCrew}
-          />
-        ) : null
+      {currentCrewId ? (
+        renderCrewView()
       ) : (
-        <div className="dragon-boat-main">
-          <section className="team-id-section">
-            {isEditingTeamId ? (
-              <input
-                className="team-id team-id-input text-input"
-                autoFocus
-                value={teamIdDraft}
-                onChange={(event) => setTeamIdDraft(event.target.value)}
-                onBlur={() => setIsEditingTeamId(false)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    void submitTeamId();
-                  } else if (event.key === "Escape") {
-                    setIsEditingTeamId(false);
-                  }
-                }}
-                aria-label="Team ID"
-              />
-            ) : (
-              <button
-                className="team-id"
-                onClick={() => copyTeamIdToClipboard(teamId)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                {teamId}
-              </button>
-            )}
-            <button
-              className="team-id-action"
-              aria-label={isEditingTeamId ? "Go to team" : "Edit team ID"}
-              title={isEditingTeamId ? "Go to team" : "Edit team ID"}
-              onMouseDown={(event) => {
-                if (isEditingTeamId) event.preventDefault();
-              }}
-              onClick={() => {
-                if (isEditingTeamId) {
-                  void submitTeamId();
-                } else {
-                  setTeamIdDraft(teamId);
-                  setIsEditingTeamId(true);
-                }
-              }}
-            >
-              {isEditingTeamId ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12h15m0 0-6.75-6.75M19.5 12l-6.75 6.75"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
-                  />
-                </svg>
-              )}
-            </button>
-          </section>
-          <section className="crews">
-            <div className="crew-list">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Crew name</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {crews.map((c) => (
-                    <tr key={c.id}>
-                      <td
-                        className="crew-name"
-                        onClick={() => {
-                          if (renamingCrewId !== c.id) setCurrCrewId(c.id);
-                        }}
-                      >
-                        {renamingCrewId === c.id ? (
-                          <input
-                            className="text-input"
-                            autoFocus
-                            value={renameDraft}
-                            onChange={(event) =>
-                              setRenameDraft(event.target.value)
-                            }
-                            onClick={(event) => event.stopPropagation()}
-                            onBlur={() =>
-                              setRenamingCrewId((currentId) =>
-                                currentId === c.id ? null : currentId,
-                              )
-                            }
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.preventDefault();
-                                void saveCrewName(c);
-                              }
-                            }}
-                          />
-                        ) : (
-                          c.name
-                        )}
-                      </td>
-                      <td>
-                        <div className="options">
-                          <button
-                            className="action-button"
-                            onClick={() => {
-                              setRenameDraft(c.name);
-                              setRenamingCrewId(c.id);
-                            }}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            className="action-button"
-                            onClick={() => copyCrew(c)}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <rect
-                                x="9"
-                                y="9"
-                                width="13"
-                                height="13"
-                                rx="2"
-                                ry="2"
-                              ></rect>
-                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                            </svg>
-                          </button>
-                          <button
-                            className="action-button delete"
-                            onClick={() => deleteCrew(c.id)}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                              <line x1="10" y1="11" x2="10" y2="17"></line>
-                              <line x1="14" y1="11" x2="14" y2="17"></line>
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button onClick={addCrew}>Create new crew</button>
-          </section>
-          <section className="paddlers">
-            <h2>Your paddlers</h2>
-            <PaddlerTable
-              paddlers={paddlers}
-              selected={selected}
-              onSelectionChange={setSelected}
-              onPaddlerClicked={onPaddlerClicked}
-              onPrimaryAction={() => setModalOpen(true)}
-              primaryActionLabel="Create new paddler"
-              onSecondaryAction={
-                selected.length > 0 ? () => deletePaddlers(selected) : null
-              }
-              secondaryActionLabel="Delete selected"
-            />
-            <AddNewPaddler
-              openState={[addModalOpen, setModalOpen]}
-              paddler={clickedPaddler}
-              onSubmit={addPaddler}
-            />
-          </section>
-        </div>
+        <TeamOverview
+          key={teamId}
+          teamId={teamId}
+          crews={crews}
+          paddlers={paddlers}
+          paddlerLoadError={paddlerLoadError}
+          onChangeTeam={changeTeam}
+          onSelectCrew={setCurrentCrewId}
+          onCreateCrew={addCrew}
+          onCopyCrew={copyCrew}
+          onDeleteCrew={deleteCrew}
+          onRenameCrew={saveCrewName}
+          onSavePaddler={savePaddler}
+          onDeletePaddlers={deletePaddlers}
+        />
       )}
     </>
   );
