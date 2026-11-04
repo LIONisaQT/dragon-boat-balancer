@@ -35,12 +35,19 @@ export default function TeamOverview({
 }: TeamOverviewProps) {
   const [isEditingTeamId, setIsEditingTeamId] = useState(false);
   const [teamIdDraft, setTeamIdDraft] = useState(teamId);
+  const teamIdInputRef = useRef<HTMLInputElement>(null);
   const [selectedPaddlerIds, setSelectedPaddlerIds] = useState<string[]>([]);
   const [renamingCrewId, setRenamingCrewId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const cancelRenameOnBlur = useRef(false);
   const [clickedPaddlerId, setClickedPaddlerId] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isEditingTeamId) {
+      teamIdInputRef.current?.select();
+    }
+  }, [isEditingTeamId]);
 
   const selectedPaddlers = useMemo(() => {
     const selectedIds = new Set(selectedPaddlerIds);
@@ -95,6 +102,7 @@ export default function TeamOverview({
       <section className="team-id-section">
         {isEditingTeamId ? (
           <input
+            ref={teamIdInputRef}
             className="team-id team-id-input text-input"
             autoFocus
             value={teamIdDraft}
