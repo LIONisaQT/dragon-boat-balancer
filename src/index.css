@@ -37,6 +37,29 @@ body {
   padding-bottom: 20px;
 }
 
+.app-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.app-header h1 {
+  grid-column: 2;
+}
+
+.app-header .help-action {
+  grid-column: 3;
+  justify-self: start;
+  margin-left: 8px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--light-muted);
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
 body.modal-open {
   overflow: hidden;
 }

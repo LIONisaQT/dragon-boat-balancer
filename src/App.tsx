@@ -273,7 +273,17 @@ function App() {
       {isFirstTimeModalOpen && (
         <FirstTimeUserModal onClose={closeFirstTimeModal} />
       )}
-      <h1>DB Crew Manager</h1>
+      <header className="app-header">
+        <h1>DB Crew Manager</h1>
+        <button
+          className="help-action"
+          aria-label="Show welcome message"
+          title="Show welcome message"
+          onClick={() => setIsFirstTimeModalOpen(true)}
+        >
+          ?
+        </button>
+      </header>
       {currentCrewId ? (
         renderCrewView()
       ) : (
