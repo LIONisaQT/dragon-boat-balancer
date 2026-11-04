@@ -10,6 +10,24 @@
     padding: 0 24px;
   }
 
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  details {
+    width: 100%;
+    text-align: left;
+  }
+
+  summary {
+    font-weight: bold;
+    background-color: var(--dark);
+    padding-left: 8px;
+    margin-bottom: 8px;
+  }
+
   p {
     text-align: left;
     line-height: 1.5;
