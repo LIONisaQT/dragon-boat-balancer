@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite --open",
     "build": "tsc -b && vite build",
+    "deploy": "firebase deploy --only hosting:dragon-boat --project ryan-shee",
     "lint": "eslint src",
     "preview": "vite preview",
-    "sm-update": "git submodule update --init --recursive",
     "prepare": "husky"
   },
   "dependencies": {
